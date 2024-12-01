@@ -1,0 +1,20 @@
+$(document).ready(function() {
+    // Wenn sich die Auswahl im ersten Dropdown ändert
+    $('#dropdown1').change(function() {
+        var selected = $(this).val();
+
+        // AJAX-Anfrage an den Server senden, um neue Optionen für Dropdown 2 zu bekommen
+        $.ajax({
+            url: '/get_options/' + selected,
+            method: 'GET',
+            success: function(data) {
+                // Das zweite Dropdown aktualisieren
+                var dropdown2 = $('#dropdown2');
+                dropdown2.empty();  // Bestehende Optionen entfernen
+                data.forEach(function(option) {
+                    dropdown2.append('<option value="' + option + '">' + option + '</option>');
+                });
+            }
+        });
+    });
+});

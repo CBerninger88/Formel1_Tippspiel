@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>F1 Driver Selection</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Formel 1 Tippspiel</h1>
+
+        <label for="name">Name:</label>
+        <select id="name">
+            <option value="Christine">Christine</option>
+            <option value="Christoph">Christoph</option>
+        </select>
+
+
+        <label for="city">Rennen:</label>
+        <select id="city">
+            <option value="Monza">Monza</option>
+            <option value="Singapur">Singapur</option>
+            <option value="Austin">Austin</option>
+        </select>
+
+        <label for="driver1">1. Platz:</label>
+        <select id="driver1">
+            <option value="Fahrer">Fahrer</option>
+            <option value="Hamilton">Hamilton</option>
+            <option value="Verstappen">Verstappen</option>
+            <option value="Norris">Norris</option>
+        </select>
+
+        <label for="driver2">2. Platz:</label>
+        <select id="driver2">
+            <option value="Fahrer">Fahrer</option>
+            <option value="Hamilton">Hamilton</option>
+            <option value="Verstappen">Verstappen</option>
+            <option value="Norris">Norris</option>
+        </select>
+
+        <button id="save">Save Selection</button>
+    </div>
+
+    <script src="{{ url_for('static', filename='scripts.js') }}"></script>
+</body>
+</html>
