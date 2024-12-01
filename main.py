@@ -86,4 +86,4 @@ def save_selection():
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     init_db()
-    app.run(debug=True, port=port)
+    app.run(host='0.0.0.0', debug=False, port=port)
