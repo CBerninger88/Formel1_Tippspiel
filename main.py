@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify, render_template, g
 import sqlite3
+import os
 
 app = Flask(__name__)
 
@@ -83,5 +84,6 @@ def save_selection():
     return jsonify({'success': True})
 
 if __name__ == '__main__':
+    port = int(os.environ.get('PORT', 5000))
     init_db()
-    app.run(debug=True)
+    app.run(debug=True, port=port)
