@@ -5,52 +5,45 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>F1 Driver Selection</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <script src="{{ url_for('static', filename='scripts_test.js') }}"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.2/xlsx.full.min.js"></script>
 </head>
-<body>
+<body data-page-id="home">
     <div class="container">
         <nav>
             <ul>
                 <li><a href="/">Home</a></li>
-                <li><a href="/tabelle">Tabelle</a></li>
                 <li><a href="/tippabgabe">Tippabgabe</a></li>
+                <li><a href="/tabelle">Tabelle</a></li>
             </ul>
         </nav>
 
         <h1>Formel 1 Tippspiel</h1>
 
-        <label for="name">Name:</label>
-        <select id="name">
-            <option value="Christine">Christine</option>
-            <option value="Christoph">Christoph</option>
-        </select>
-
-
-        <label for="city">Rennen:</label>
-        <select id="city">
+        <label for="citySelect">Rennen:</label>
+        <select id="citySelect">
             <option value="Monza">Monza</option>
             <option value="Singapur">Singapur</option>
             <option value="Austin">Austin</option>
         </select>
 
-        <label for="driver1">1. Platz:</label>
-        <select id="driver1">
-            <option value="Fahrer">Fahrer</option>
-            <option value="Hamilton">Hamilton</option>
-            <option value="Verstappen">Verstappen</option>
-            <option value="Norris">Norris</option>
-        </select>
 
-        <label for="driver2">2. Platz:</label>
-        <select id="driver2">
-            <option value="Fahrer">Fahrer</option>
-            <option value="Hamilton">Hamilton</option>
-            <option value="Verstappen">Verstappen</option>
-            <option value="Norris">Norris</option>
-        </select>
+        <table id="tippTabelle">
+            <thead>
+                <tr>
+                    <th></th>
+                    <th>Christine</th>
+                    <th>Christoph</th>
+                </tr>
+            </thead>
+        <tbody>
 
-        <button id="save">Save Selection</button>
+        </tbody>
+        </table>
+
+        <button id="downloadButton"> Download als Excel-Datei</button>
+
     </div>
 
-    <script src="{{ url_for('static', filename='scripts.js') }}"></script>
 </body>
 </html>

@@ -6,6 +6,9 @@ app = Flask(__name__)
 
 DATABASE = 'tippdata.db'
 
+names = ['Christoph', 'Christine']
+drivers = ['driver1', 'driver2']
+
 def get_db():
     db = getattr(g, '_database', None)
     if db is None:
@@ -91,7 +94,63 @@ def save_selection():
 
     return jsonify({'success': True})
 
+
+@app.route('/get_tipps')
+def get_tipps():
+    city = request.args.get('city')
+    #name = 'Christine'
+    driver1_list = []
+    driver2_list = []
+    db = get_db()
+    cursor = db.cursor()
+
+    ergebnis = {}
+
+    cursor.execute(f'''
+         WITH LatestEntries AS (
+            SELECT name, driver1, driver2,
+                ROW_NUMBER() OVER (PARTITION BY name ORDER BY id DESC) as rn
+            FROM tippdata
+            WHERE city = ?
+        )
+        SELECT name, driver1, driver2
+        FROM LatestEntries
+        WHERE rn = 1;
+        ''', (city,))
+
+    results = cursor.fetchall()
+
+    for result in results:
+        name, driver1, driver2 = result
+        if name not in ergebnis:
+            ergebnis[name] = []
+        ergebnis[name].append((driver1, driver2))
+#    for name in names:
+#        cursor.execute('''
+#            SELECT driver1, driver2 FROM tippdata
+#            WHERE city = ? AND name = ?
+#            ORDER BY id DESC LIMIT 1
+#            ''', (city, name))
+#        result = cursor.fetchone()
+#
+#        if result is None:
+#            ergebnis.append({'name': name, 'driver1': 'Fahrer 1', 'driver2': 'Fahrer 2'})
+#        else:
+#            driver1, driver2 = result
+#            ergebnis.append({'name': name, 'driver1': driver1, 'driver2': driver2})
+
+    return jsonify(ergebnis)
+
+
+
+
 if __name__ == '__main__':
+    debug_mode = os.getenv('FLASK_ENV') == 'development'
+    flask_app = os.getenv('FLASK_APP')
+    flask_env = os.getenv('FLASK_ENV')
     port = int(os.environ.get('PORT', 5000))
     init_db()
-    app.run(host='0.0.0.0', debug=True, port=port)
+    print(flask_env)
+    app.run(debug=False)
+    test = 1
+

@@ -1,4 +1,6 @@
 document.addEventListener('DOMContentLoaded', (event) => {
+
+    console.log('Allgemeine Initialisierung');
     const nameSelect = document.getElementById('name');
     const citySelect = document.getElementById('city');
     const driver1Select = document.getElementById('driver1');
