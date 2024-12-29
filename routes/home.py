@@ -5,7 +5,7 @@ home_bp = Blueprint('home', __name__)
 
 @home_bp.route('/')
 def index():
-    return render_template('index.html')
+    return render_template('home.html')
 
 @home_bp.route('/get_tipps')
 def get_tipps():
