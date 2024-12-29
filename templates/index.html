@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>F1 Driver Selection</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-    <script src="{{ url_for('static', filename='scripts_test.js') }}"></script>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.2/xlsx.full.min.js"></script>
 </head>
 <body data-page-id="home">
@@ -14,7 +14,13 @@
             <ul>
                 <li><a href="/">Home</a></li>
                 <li><a href="/tippabgabe">Tippabgabe</a></li>
-                <li><a href="/tabelle">Tabelle</a></li>
+                <li class="dropdown">
+                    <a class="dropbtn">Ergebnisse</a>
+                    <div class="dropdown-content">
+                        <a href="/rennergebnis">Rennergebnis</a>
+                        <a href="/gesamtergebnis">Gesamtergebnis</a>
+                    </div>
+                </li>
             </ul>
         </nav>
 
@@ -34,6 +40,7 @@
                     <th></th>
                     <th>Christine</th>
                     <th>Christoph</th>
+                    <th>Jürgen</th>
                 </tr>
             </thead>
         <tbody>
@@ -42,7 +49,7 @@
         </table>
 
         <button id="downloadButton"> Download als Excel-Datei</button>
-
+        <script type="module" src="static/mainscript.js"></script>
     </div>
 
 </body>

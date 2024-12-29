@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>F1 Driver Selection</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-        <script src="{{ url_for('static', filename='scripts_test.js') }}"></script>
+        <script src="{{ url_for('static', filename='mainscript.js') }}"></script>
 
 </head>
 <body data-page-id="tippabgabe">
@@ -14,7 +14,13 @@
             <ul>
                 <li><a href="/">Home</a></li>
                 <li><a href="/tippabgabe">Tippabgabe</a></li>
-                <li><a href="/tabelle">Tabelle</a></li>
+                <li class="dropdown">
+                    <a class="dropbtn">Ergebnisse</a>
+                    <div class="dropdown-content">
+                        <a href="/rennergebnis">Rennergebnis</a>
+                        <a href="/gesamtergebnis">Gesamtergebnis</a>
+                    </div>
+                </li>
             </ul>
         </nav>
 
@@ -24,6 +30,7 @@
         <select id="name">
             <option value="Christine">Christine</option>
             <option value="Christoph">Christoph</option>
+            <option value="Jürgen">Jürgen</option>
         </select>
 
 
@@ -44,6 +51,14 @@
 
         <label for="driver2">2. Platz:</label>
         <select id="driver2">
+            <option value="Fahrer">Fahrer</option>
+            <option value="Hamilton">Hamilton</option>
+            <option value="Verstappen">Verstappen</option>
+            <option value="Norris">Norris</option>
+        </select>
+
+        <label for="driver3">3. Platz:</label>
+        <select id="driver3">
             <option value="Fahrer">Fahrer</option>
             <option value="Hamilton">Hamilton</option>
             <option value="Verstappen">Verstappen</option>
