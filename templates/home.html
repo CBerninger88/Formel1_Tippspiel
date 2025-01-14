@@ -9,21 +9,33 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.2/xlsx.full.min.js"></script>
 </head>
 <body data-page-id="home">
+
+
     <div class="container">
         <nav>
             <ul>
                 <li><a href="/">Home</a></li>
-                <li><a href="/tippabgabe">Tippabgabe</a></li>
-                <li class="dropdown">
-                    <a class="dropbtn">Ergebnisse</a>
-                    <div class="dropdown-content">
+                <li class="dropdown" id="tippDropdownLi">
+                    <a href="javascript:void(0);" class="dropbtn" id="tippDropdownToggle">Tippabgabe</a>
+                       <!-- Dropdown-Inhalte -->
+                    <div class="dropdown-content" id="tippDropdownMenu">
+                        <a href="/tippabgabe">Rennen</a>
+                        <a href="/tippabgabe">Sprintrennen</a>
+                    </div>
+                </li>
+                <li class="dropdown" id="ergDropdownLi">
+                    <a href="javascript:void(0);" class="dropbtn" id="ergDropdownToggle">Ergebnisse</a>
+                       <!-- Dropdown-Inhalte -->
+                    <div class="dropdown-content" id="ergDropdownMenu">
                         <a href="/rennergebnis">Rennergebnis</a>
                         <a href="/gesamtergebnis">Gesamtergebnis</a>
                     </div>
                 </li>
+
                 <li><a href="/wmStand">WM Stand</a></li>
             </ul>
         </nav>
+
 
         <h1>Formel 1 Tippspiel</h1>
 
@@ -34,23 +46,26 @@
             <option value="Austin">Austin</option>
         </select>
 
+        <div class="table-wrapper">
+            <table id="tippTabelle">
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th>Christine</th>
+                        <th>Christoph</th>
+                        <th>Jürgen</th>
+                    </tr>
+                </thead>
+                <tbody>
 
-        <table id="tippTabelle">
-            <thead>
-                <tr>
-                    <th></th>
-                    <th>Christine</th>
-                    <th>Christoph</th>
-                    <th>Jürgen</th>
-                </tr>
-            </thead>
-        <tbody>
+                </tbody>
+            </table>
+        </div>
 
-        </tbody>
-        </table>
 
         <button id="downloadButton"> Download als Excel-Datei</button>
         <script type="module" src="static/mainscript.js"></script>
+
     </div>
 
 </body>

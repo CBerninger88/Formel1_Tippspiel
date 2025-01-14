@@ -14,47 +14,64 @@ body {
     border-radius: 5px;
 }
 
+/* Navigation */
 nav {
     background-color: #333;
-    overflow: hidden;
+    height: 100%;
+    position: relative; /* Setzt das Dropdown relativ zur Navigation */
+    display: flex; /* Flexbox für Navigation */
+    flex-wrap: nowrap; /* Verhindert Umbruch von Navigationselementen */
+    overflow-x: auto;/* Ermöglicht horizontales Scrollen */
+    white-space: nowrap;
 }
 
+/* Navigation Liste */
 nav ul {
     list-style-type: none;
-    margin: 0;
+    margin: 10px 10px;
     padding: 0;
     display: flex;
+    align-items: center;
 }
 
+/* Listenelemente */
 nav ul li {
-    /*display: inline;*/
-    flex: 1
-    /*margin-right: 10px;*/
-    position: relative; /* Notwendig für das Dropdown */
-}
+    position: relative; /* Wichtig für das Dropdown */
+ }
 
+/* Links in der Navigation */
 nav ul li a {
     display: block;
     color: white;
     text-align: center;
     padding: 14px 16px;
     text-decoration: none;
+    /*white-space: nowrap;*/
 }
 
+/* Hover-Effekt für Links */
 nav ul li a:hover {
     background-color: #111;
 }
 
+.dropdown {
+    position: relative;
+    overflow-y: visible;
+}
 /* Dropdown-Menü */
 .dropdown-content {
-    display: none;
-    position: absolute;
+    display: none;  /* Standardmäßig unsichtbar */
+    position: fixed; /* Direkt unter dem Navigationspunkt */
+    top: 200px; /* Positioniert das Dropdown direkt unter der Navigationsleiste */
+    left: 100px;
     background-color: #f9f9f9;
     min-width: 160px;
-    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-    z-index: 1;
+    box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+    z-index: 9999; /* Über der Navigation */
+    overflow: hidden;
 }
 
+/* Dropdown-Links */
 .dropdown-content a {
     color: black;
     padding: 12px 16px;
@@ -62,19 +79,58 @@ nav ul li a:hover {
     display: block;
 }
 
+/* Hover-Effekt für Links im Dropdown */
 .dropdown-content a:hover {
     background-color: #f1f1f1;
 }
 
-/* Zeige das Dropdown-Menü beim Überfahren */
-.dropdown:hover .dropdown-content {
+/* Styling des Links, der das Dropdown öffnet */
+.dropbtn {
     display: block;
+    color: white;
+    text-align: center;
+    padding: 14px 16px;
+    cursor: pointer;
 }
 
-/* Verändere den Stil des Hauptlinks, wenn das Dropdown aktiv ist */
-.dropdown:hover .dropbtn {
-    text-decoration: underline;
+/* Hover-Effekt für das Dropdown-Label */
+.dropbtn:hover {
+    background-color: #111;
 }
+
+/* Dropdown sichtbar beim Hover */
+/*.dropdown:hover .dropdown-content {
+    display: block;
+}
+*/
+/* Tabelle */
+.table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin: 20px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    max-width: 100%;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+th, td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+th {
+    background-color: #f2f2f2;
+}
+
 
 h1 {
     text-align: center;
@@ -111,20 +167,4 @@ button {
 
 button:hover {
     background-color: #0056b3;
-}
-
-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin: 20px;
-}
-
-th, td {
-    border: 1px solid #ddd;
-    padding: 8px;
-    text-align: left;
-}
-
-th {
-    background-color: #f2f2f2;
 }
