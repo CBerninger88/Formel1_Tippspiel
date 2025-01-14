@@ -24,26 +24,28 @@ def get_selection():
     result = cursor.fetchone()
 
     if result:
-        driver1, driver2, driver3 = result
-        return jsonify({'driver1': driver1, 'driver2': driver2, 'driver3': driver3})
+        drivers = {f'driver{i+1}': result[i] for i in range(len(result))}
+#        driver1, driver2, driver3 = result
+        return jsonify(drivers)
     else:
-        return jsonify({'driver1': '', 'driver2': '', 'driver3': ''})
+        # Dynamisch leere Fahrer zurückgeben
+        return jsonify({f'driver{i + 1}': 'Fahrer auswählen' for i in range(4)})
 
 @tippabgabe_bp.route('/save_selection', methods=['POST'])
 def save_selection():
     data = request.get_json()
     city = data['city']
     name = data['name']
-    driver1 = data['driver1']
-    driver2 = data['driver2']
-    driver3 = data['driver3']
+
+    drivers = [data.get(f'driver{i+1}', '') for i in range(3)]
+    values = [name, city] + drivers
 
     db = get_db()
     cursor = db.cursor()
     cursor.execute('''
         INSERT INTO tippdata (name, city, driver1, driver2, driver3)
         VALUES (?,?,?,?,?)    
-    ''', (name, city, driver1, driver2, driver3)
+    ''', values
     )
     db.commit()
 

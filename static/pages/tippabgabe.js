@@ -1,18 +1,32 @@
+import { populateDropdowns } from '../modules/utils.js';
+
 export function initTippabgabePage(){
-    console.log('HomeSeite Initialisierung')
+    console.log('Tippabgabe- Seite Initialisierung');
+
+
     const nameSelect = document.getElementById('name');
     const citySelect = document.getElementById('city');
-    const driver1Select = document.getElementById('driver1');
-    const driver2Select = document.getElementById('driver2');
-    const driver3Select = document.getElementById('driver3');
+    const driverSelects = Array.from(document.querySelectorAll('[id^="driver"]'));
     const saveButton = document.getElementById('save');
+
+    // 1. Dynamische Namen und Städte
+    const tippSpieler = ['Christine', 'Christoph', 'Jürgen'];
+    populateDropdowns([nameSelect], tippSpieler, 'Name auswählen');
+
+    const cities = ['Monza', 'Singapur', 'Austin'];
+    populateDropdowns([citySelect], cities, 'Stadt auswählen');
+
+    // 1. Dynamische Fahrer-Dropdowns
+    const fahrerListe = ['Hamilton', 'Verstappen', 'Norris', 'Leclerc'];
+    populateDropdowns(driverSelects, fahrerListe, 'Fahrer auswählen');
+
 
     nameSelect.addEventListener('change', fetchSelection);
     citySelect.addEventListener('change', fetchSelection);
     saveButton.addEventListener('click', saveSelection);
 
     // Initiales Laden der gespeicherten Auswahl
-    citySelect.dispatchEvent(new Event('change'));
+    //citySelect.dispatchEvent(new Event('change'));
 
     // Event-Listener für das Ändern der Stadt oder Saison
     function fetchSelection() {
@@ -22,9 +36,10 @@ export function initTippabgabePage(){
         fetch(`/get_selection?name=${selectedName}&city=${selectedCity}`)
             .then(response => response.json())
             .then(data => {
-                driver1Select.value = data.driver1 || "Fahrer";
-                driver2Select.value = data.driver2 || "Fahrer";
-                driver3Select.value = data.driver3 || "Fahrer";
+                driverSelects.forEach((qualiDriverSelect, index) => {
+                   const qualiDriverKey = `driver${index + 1}`;
+                   qualiDriverSelect.value = data[qualiDriverKey] || "Fahrer";
+                });
             });
     }
 
@@ -32,16 +47,20 @@ export function initTippabgabePage(){
     function saveSelection() {
         const name = nameSelect.value;
         const city = citySelect.value;
-        const driver1 = driver1Select.value;
-        const driver2 = driver2Select.value;
-        const driver3 = driver3Select.value;
+        const qualiDriverData = driverSelects.map(driver => driver.value);
+
+        // Dictionary mit Keys (driver1, driver2, etc.) generieren
+        const qualiDrivers = {};
+        qualiDriverData.forEach((driver, index) => {
+            qualiDrivers[`driver${index + 1}`] = driver;
+        });
 
         fetch('/save_selection', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ name, city, driver1, driver2, driver3 }),
+            body: JSON.stringify({ name, city, ...qualiDrivers}),
         })
         .then(response => response.json())
         .then(data => {

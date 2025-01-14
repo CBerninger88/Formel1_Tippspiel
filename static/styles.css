@@ -137,6 +137,39 @@ h1 {
     color: #333;
 }
 
+
+.form-group {
+    display: flex;
+    align-items: center;
+    margin-top: 10px;
+}
+
+/* Label soll etwas Abstand zum Dropdown haben */
+.form-group label {
+    margin-right: 10px;
+    width: 100px; /* Einheitliche Breite für Labels */
+}
+
+/* Dropdown passt sich an */
+.form-group select {
+    width: 60%;               /* Schmaler als vorher */
+    padding: 8px 12px;        /* Weniger Padding für kompakteres Design */
+    font-size: 14px;          /* Kleinere Schriftgröße */
+    border: 1px solid #ccc;   /* Dezente Umrandung */
+    border-radius: 4px;       /* Abgerundete Ecken */
+    background-color: #fff;   /* Weißer Hintergrund */
+    appearance: none;         /* Entfernt den Browser-Standardstil */
+    -webkit-appearance: none; /* Für Safari */
+    -moz-appearance: none;    /* Für Firefox */
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"><path fill="%23999" d="M7 10l5 5 5-5z"/></svg>');
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 12px;
+    cursor: pointer;
+    transition: border-color 0.3s ease;
+}
+
+
 label {
     display: block;
     margin-top: 20px;

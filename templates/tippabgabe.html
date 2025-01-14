@@ -10,66 +10,62 @@
 </head>
 <body data-page-id="tippabgabe">
     <div class="container">
-         <nav>
+          <nav>
             <ul>
                 <li><a href="/">Home</a></li>
-                <li><a href="/tippabgabe">Tippabgabe</a></li>
-                <li class="dropdown" id="dropdownLi">
-                    <a href="javascript:void(0);" class="dropbtn" id="dropdownToggle">Ergebnisse</a>
+                <li class="dropdown" id="tippDropdownLi">
+                    <a href="javascript:void(0);" class="dropbtn" id="tippDropdownToggle">Tippabgabe</a>
                        <!-- Dropdown-Inhalte -->
-                    <div class="dropdown-content">
+                    <div class="dropdown-content" id="tippDropdownMenu">
+                        <a href="/tippabgabe">Rennen</a>
+                        <a href="/tippabgabe">Sprintrennen</a>
+                    </div>
+                </li>
+                <li class="dropdown" id="ergDropdownLi">
+                    <a href="javascript:void(0);" class="dropbtn" id="ergDropdownToggle">Ergebnisse</a>
+                       <!-- Dropdown-Inhalte -->
+                    <div class="dropdown-content" id="ergDropdownMenu">
                         <a href="/rennergebnis">Rennergebnis</a>
                         <a href="/gesamtergebnis">Gesamtergebnis</a>
                     </div>
                 </li>
-                <li>
-                    <a href="/wmStand">WM Stand</a>
 
-
-                </li>
+                <li><a href="/wmStand">WM Stand</a></li>
             </ul>
         </nav>
 
         <h1>Formel 1 Tippspiel</h1>
 
         <label for="name">Name:</label>
-        <select id="name">
-            <option value="Christine">Christine</option>
-            <option value="Christoph">Christoph</option>
-            <option value="Jürgen">Jürgen</option>
-        </select>
+        <select id="name" class="driver-select"></select>
 
 
         <label for="city">Rennen:</label>
-        <select id="city">
-            <option value="Monza">Monza</option>
-            <option value="Singapur">Singapur</option>
-            <option value="Austin">Austin</option>
-        </select>
+        <select id="city" class="driver-select"></select>
 
-        <label for="driver1">1. Platz:</label>
-        <select id="driver1">
-            <option value="Fahrer">Fahrer</option>
-            <option value="Hamilton">Hamilton</option>
-            <option value="Verstappen">Verstappen</option>
-            <option value="Norris">Norris</option>
-        </select>
+        <h1>Qualifikation</h1>
 
-        <label for="driver2">2. Platz:</label>
-        <select id="driver2">
-            <option value="Fahrer">Fahrer</option>
-            <option value="Hamilton">Hamilton</option>
-            <option value="Verstappen">Verstappen</option>
-            <option value="Norris">Norris</option>
-        </select>
+        <div class="form-group">
+            <label for="driver1">1. Platz:</label>
+            <select id="driver1" class="driver-select"></select>
+        </div>
 
-        <label for="driver3">3. Platz:</label>
-        <select id="driver3">
-            <option value="Fahrer">Fahrer</option>
-            <option value="Hamilton">Hamilton</option>
-            <option value="Verstappen">Verstappen</option>
-            <option value="Norris">Norris</option>
-        </select>
+        <div class="form-group">
+            <label for="driver2">2. Platz:</label>
+            <select id="driver2" class="driver-select"></select>
+        </div>
+
+        <div class="form-group">
+            <label for="driver3">3. Platz:</label>
+            <select id="driver3" class="driver-select"></select>
+        </div>
+
+        <div class="form-group">
+            <label for="driv4">4. Platz:</label>
+            <select id="driv4" class="driver-select"></select>
+        </div>
+
+        <h1>Rennen</h1>
 
         <button id="save">Save Selection</button>
     </div>
