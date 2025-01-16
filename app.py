@@ -1,7 +1,9 @@
 from flask import Flask
 from routes.home import home_bp
+from routes.sprinttipps import sprinttipps_bp
 from routes.tabelle import tabelle_bp
 from routes.tippabgabe import tippabgabe_bp
+from routes.sprinttipps import sprinttipps_bp
 from routes.rennergebnis import rennergebnis_bp
 from routes.gesamtergebnis import gesamtergebnis_bp
 from routes.wmStand import wmStand_bp
@@ -14,6 +16,7 @@ app = Flask(__name__)
 app.register_blueprint(home_bp)
 app.register_blueprint(tabelle_bp)
 app.register_blueprint(tippabgabe_bp)
+app.register_blueprint(sprinttipps_bp)
 app.register_blueprint(rennergebnis_bp)
 app.register_blueprint(gesamtergebnis_bp)
 app.register_blueprint(wmStand_bp)

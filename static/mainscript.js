@@ -17,9 +17,9 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             break;
 
-        case 'tabelle':
-            import('./pages/tippabgabe.js').then(module => {
-                module.initTabellePage();
+        case 'sprinttipps':
+            import('./pages/sprinttipps.js').then(module => {
+                module.initSprinttippsPage();
             });
             break;
 
