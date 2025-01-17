@@ -15,11 +15,37 @@ export function initTippabgabePage(){
     const tippSpieler = ['Christine', 'Christoph', 'Jürgen'];
     populateDropdowns([nameSelect], tippSpieler, 'Name auswählen');
 
-    const cities = ['Melbourne', 'Schanghai', 'Suzuka', 'Bahrain'];
+    const cities = [
+    "Melbourne",
+    "Shanghai",
+    "Suzuka",
+    "Sakhir",
+    "Dschidda",
+    "Miami",
+    "Imola",
+    "Monte Carlo",
+    "Barcelona",
+    "Montreal",
+    "Spielberg",
+    "Silverstone",
+    "Spa-Francorchamps",
+    "Budapest",
+    "Zandvoort",
+    "Monza",
+    "Baku",
+    "Singapur",
+    "Austin",
+    "Mexiko-Stadt",
+    "São Paulo",
+    "Las Vegas",
+    "Doha",
+    "Abu Dhabi"
+];
     populateDropdowns([citySelect], cities, 'Stadt auswählen');
 
     // 2. Dynamische Fahrer-Dropdowns
-    const fahrerListe = ['Hamilton', 'Verstappen', 'Norris', 'Leclerc'];
+    const fahrerListe = ["Max Verstappen", "Liam Lawson", "George Russell", "Paul Aron", "Charles Leclerc", "Lewis Hamilton", "Lando Norris", "Oscar Piastri", "Fernando Alonso", "Lance Stroll", "Pierre Gasly", "Jack Doohan", "Alexander Albon", "Logan Sargeant", "Isack Hadjar", "Franco Colapinto"];
+
     populateDropdowns(qdriverSelects, fahrerListe, 'Fahrer auswählen');
     populateDropdowns(driverSelects, fahrerListe, 'Fahrer auswählen');
     populateDropdowns([fDriverSelect], fahrerListe, 'Fahrer auswählen');
