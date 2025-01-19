@@ -38,28 +38,67 @@
 
 
         <h1>Formel 1 Tippspiel</h1>
+        <img src="{{ url_for('static', filename='Logo_Gans_und_Goessel.jpg') }}" alt="Formel 1 Bild" style="display: block; max-width: 50%; height: auto; margin: 20px auto;">
 
-        <label for="citySelect">Rennen:</label>
-        <select id="citySelect">
-            <option value="Monza">Monza</option>
-            <option value="Singapur">Singapur</option>
-            <option value="Austin">Austin</option>
-        </select>
+         <label for="citySelect">Rennen:</label>
+        <select id="citySelect" class="driver-select"></select>
 
         <div class="table-wrapper">
-            <table id="tippTabelle">
+
+            <h1>Qualifying</h1>
+            <table id="qTippTabelle">
                 <thead>
                     <tr>
                         <th></th>
+                        <th>Alexander</th>
                         <th>Christine</th>
                         <th>Christoph</th>
                         <th>Jürgen</th>
+                        <th>Simon</th>
+                        <th>Ergebnis</th>
                     </tr>
                 </thead>
                 <tbody>
 
                 </tbody>
             </table>
+
+            <h1>Rennen</h1>
+            <table id="rTippTabelle">
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th>Alexander</th>
+                        <th>Christine</th>
+                        <th>Christoph</th>
+                        <th>Jürgen</th>
+                        <th>Simon</th>
+                        <th>Ergebnis</th>
+                    </tr>
+                </thead>
+                <tbody>
+
+                </tbody>
+            </table>
+
+            <h1>Schnellste Runde</h1>
+            <table id="fTippTabelle">
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th>Alexander</th>
+                        <th>Christine</th>
+                        <th>Christoph</th>
+                        <th>Jürgen</th>
+                        <th>Simon</th>
+                        <th>Ergebnis</th>
+                    </tr>
+                </thead>
+                <tbody>
+
+                </tbody>
+            </table>
+
         </div>
 
 

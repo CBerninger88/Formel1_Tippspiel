@@ -1,6 +1,17 @@
+import { populateDropdowns } from '../modules/utils.js';
+
 export function initHomePage(){
     const citySelect = document.getElementById('citySelect');
     const downloadButton = document.getElementById('downloadButton');
+
+    fetch('/get_cities')
+        .then(response => response.json())
+        .then(cities => {
+            populateDropdowns([citySelect], cities, 'Stadt auswählen');
+        })
+        .catch(error => {
+            console.error('Fehler beim Laden der Städte:', error);
+        });
 
     citySelect.addEventListener('change', constructTabelle)
     downloadButton.addEventListener('click', downloadTabelle)
@@ -8,58 +19,83 @@ export function initHomePage(){
     citySelect.dispatchEvent(new Event('change'));
 
     function downloadTabelle() {
-        // Rufe die Tabelle ab
-        const table = document.getElementById('tippTabelle');
-        const rows = table.querySelectorAll('tr');
-        const data = [];
 
-        // Gehe durch die Zeilen der Tabelle
-        rows.forEach(row => {
-            const cells = row.querySelectorAll('td, th');
-            const rowData = [];
+        const table = ['qTippTabelle', 'rTippTabelle', 'fTippTabelle'];
+        const sheetNames = ['Qualifying', 'Rennen', 'Schnellste Runde'];
 
-            // Gehe durch die Zellen und extrahiere den Textinhalt
-            cells.forEach(cell => {
-                rowData.push(cell.textContent);
+        //Arbeitsmappe für Excel erstellen
+        let wb = XLSX.utils.book_new();
+
+        table.forEach((tableId, index) => {
+            const table = document.getElementById(tableId);
+            const rows = table.getElementsByTagName('tr');
+            const tableData = [];
+
+            // Tabellenkopf extrahieren
+            const headers = rows[0].querySelectorAll('th');
+            const headerArray = [];
+            headers.forEach(header => {
+                headerArray.push(header.innerText.trim());
             });
+            tableData.push(headerArray); // Koopfzeile zu den Daten hinzufügen
 
-            // Füge die Daten der Zeile zur CSV hinzu
-            data.push(rowData);
+            //Tabellendaten extrahieren
+            for (let i = 1; i < rows.length; i++) {
+                const cells = rows[i].querySelectorAll('td');
+                const rowArray = [];
+                cells.forEach(cell => {
+                    rowArray.push(cell.innerText.trim());
+                });
+                tableData.push(rowArray); // Zeilen zu den Daten hinzufügen
+            }
+
+            // Daten in das Arbeitsblatt einfügen
+            const ws = XLSX.utils.aoa_to_sheet(tableData);
+            XLSX.utils.book_append_sheet(wb, ws, sheetNames[index]);
         });
 
-        // Erstelle ein Arbeitsblatt (worksheet) aus den extrahierten Daten
-        const ws = XLSX.utils.aoa_to_sheet(data);
-
-        // Erstelle eine Arbeitsmappe (workbook) und füge das Arbeitsblatt hinzu
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Tabelle");
-
-        // Erstelle den Download-Link und löse den Download aus
-        XLSX.writeFile(wb, "tabelle.xlsx"); // Datei wird mit dem Namen "tabelle.xlsx" heruntergeladen
+        // Excel-Datei generieren und herunterladen
+        XLSX.writeFile(wb, 'F1_Tippspiel.xlsx');
     }
 
     function constructTabelle() {
-        const tippTabelle = document.getElementById('tippTabelle').querySelector('tbody');
-        const names = ['Christine', 'Christoph', 'Jürgen'];
-        const platzierungen = [1,2,3]
-        tippTabelle.innerHTML = '';
+        const qTippTabelle = document.getElementById('qTippTabelle').querySelector('tbody');
+        const rTippTabelle = document.getElementById('rTippTabelle').querySelector('tbody');
+        const fTippTabelle = document.getElementById('fTippTabelle').querySelector('tbody');
+        const names = ['Alexander','Christine', 'Christoph', 'Jürgen', 'Simon', 'Ergebnis'];
+        const qplatzierungen = [1,2,3,4];
+        const rplatzierungen = [1,2,3,4,5,6,7,8,9,10];
+        qTippTabelle.innerHTML = '';
+        rTippTabelle.innerHTML = '';
+        fTippTabelle.innerHTML = '';
 
         // Initialisiere die Tabelle mit Platzierungen
-        platzierungen.forEach(platz => {
+        qplatzierungen.forEach(platz => {
             const tr = document.createElement('tr');
             tr.innerHTML = `<td>${platz}</td>`;
-            tippTabelle.appendChild(tr);
+            qTippTabelle.appendChild(tr);
         });
 
-        const selectedCity = citySelect.value
+        rplatzierungen.forEach(platz => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td>${platz}</td>`;
+            rTippTabelle.appendChild(tr);
+        });
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td> S</td>`;
+        fTippTabelle.appendChild(tr);
+
+        const selectedCity = citySelect.value;
+
         fetch(`/get_tipps?city=${selectedCity}`)
             .then(response => response.json())
             .then(data => {
                 console.log('API Antwort:', data);
 
                 names.forEach((name, colIndex) => {
-                    platzierungen.forEach((platz, rowIndex) => {
-                        const tr = tippTabelle.rows[rowIndex];
+                    qplatzierungen.forEach((platz, rowIndex) => {
+                        const tr = qTippTabelle.rows[rowIndex];
                         let td = tr.cells[colIndex + 1]; //+1 wegen der PLatzierungsspalte
 
                         if(!td) {
@@ -67,13 +103,51 @@ export function initHomePage(){
                             tr.appendChild(td);
                         }
 
-                        if (data[name] && data[name][0][platz -1]) {
-                            const driver = data[name][0][platz - 1];
-                            td.textContent = `${driver}`;
+                        // Zugriff auf den jeweiligen Fahrer basierend auf der Platzierung
+                        const qdriverKey = `qdriver${platz}`; // Schlüssel für den jeweiligen Fahrer
+                        if (data[name] && data[name][qdriverKey]) {
+                            const driver = data[name][qdriverKey];
+                            td.textContent = driver;
                         } else {
-                            td.textContent = 'N/A';
+                            td.textContent = '❓';
                         }
                     });
+
+                    rplatzierungen.forEach((platz, rowIndex) => {
+                        const tr = rTippTabelle.rows[rowIndex];
+                        let td = tr.cells[colIndex + 1]; //+1 wegen der PLatzierungsspalte
+
+                        if(!td) {
+                            td = document.createElement('td');
+                            tr.appendChild(td);
+                        }
+
+                        // Zugriff auf den jeweiligen Fahrer basierend auf der Platzierung
+                        const rdriverKey = `rdriver${platz}`; // Schlüssel für den jeweiligen Fahrer
+                        if (data[name] && data[name][rdriverKey]) {
+                            const driver = data[name][rdriverKey];
+                            td.textContent = driver;
+                        } else {
+                            td.textContent = '❓';
+                        }
+                    });
+
+                    const tr = fTippTabelle.rows[0];
+                    let td = tr.cells[colIndex + 1]; //+1 wegen der PLatzierungsspalte
+
+                    if(!td) {
+                        td = document.createElement('td');
+                        tr.appendChild(td);
+                    }
+
+                    // Zugriff auf den jeweiligen Fahrer basierend auf der Platzierung
+                    const fdriverKey = `fdriver`; // Schlüssel für den jeweiligen Fahrer
+                    if (data[name] && data[name][fdriverKey]) {
+                        const driver = data[name][fdriverKey];
+                        td.textContent = driver;
+                    } else {
+                        td.textContent = '❓';
+                    }
                 });
             });
     }

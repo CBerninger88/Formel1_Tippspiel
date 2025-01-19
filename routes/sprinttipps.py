@@ -18,7 +18,7 @@ def get_sprinttipps():
     cursor = db.cursor()
 
     # 1. user_id anhand des Namens finden
-    cursor.execute('SELECT id FROM Users WHERE name = ?', (name,))
+    cursor.execute('SELECT id FROM users WHERE name = %s', (name,))
     user_result = cursor.fetchone()
     if not user_result:
         drivers = {f'sdriver{i + 1}': "" for i in range(8)}
@@ -27,7 +27,7 @@ def get_sprinttipps():
     user_id = user_result[0]
 
     # 2. race_id anhand der Stadt finden
-    cursor.execute('SELECT id FROM Races WHERE city = ?', (city,))
+    cursor.execute('SELECT id FROM races WHERE city = %s', (city,))
     race_result = cursor.fetchone()
     if not race_result:
         drivers = {f'sdriver{i + 1}': "" for i in range(8)}
@@ -38,8 +38,8 @@ def get_sprinttipps():
     # 3. Qualifying-Tipps aus der QualiTips-Tabelle auslesen
     cursor.execute("""
            SELECT driver1, driver2, driver3, driver4, driver5, driver6, driver7, driver8
-           FROM SprintTips
-           WHERE user_id = ? AND race_id = ?
+           FROM sprinttipps
+           WHERE user_id = %s AND race_id = %s
            ORDER BY id DESC LIMIT 1
        """, (user_id, race_id))
     result = cursor.fetchone()
@@ -67,14 +67,14 @@ def save_sprinttipps():
     cursor = db.cursor()
 
     # 1. user_id ermitteln
-    cursor.execute('SELECT id FROM Users WHERE name = ?', (name,))
+    cursor.execute('SELECT id FROM users WHERE name = %s', (name,))
     user_result = cursor.fetchone()
     if not user_result:
         return jsonify({'success': False, 'message': 'User not found'}), 400
     user_id = user_result[0]
 
     # 2. race_id ermitteln
-    cursor.execute('SELECT id FROM Races WHERE city = ?', (city,))
+    cursor.execute('SELECT id FROM races WHERE city = %s', (city,))
     race_result = cursor.fetchone()
     if not race_result:
         return jsonify({'success': False, 'message': 'Race not found'}), 400
@@ -82,10 +82,35 @@ def save_sprinttipps():
 
     # 3. Daten in QualiTips speichern
     cursor.execute('''
-            INSERT INTO SprintTips (user_id, race_id, driver1, driver2, driver3, driver4, driver5, driver6, driver7, driver8)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO sprinttipps (user_id, race_id, driver1, driver2, driver3, driver4, driver5, driver6, driver7, driver8)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
     ''', (user_id, race_id, *drivers))
 
     db.commit()
 
     return jsonify({'success': True})
+
+
+@sprinttipps_bp.route('/sprint_get_cities', methods=['GET'])
+def get_cities():
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("SELECT city FROM races WHERE is_sprint ORDER BY date ASC;")
+    result = cursor.fetchall()
+
+    # Liste der Städte extrahieren
+    cities = [row[0] for row in result]
+
+    return jsonify(cities)
+
+@sprinttipps_bp.route('/get_drivers', methods=['GET'])
+def get_drivers():
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("SELECT name FROM drivers ORDER BY name ASC;")
+    result = cursor.fetchall()
+
+    # Liste der Städte extrahieren
+    drivers = [row[0] for row in result]
+
+    return jsonify(drivers)

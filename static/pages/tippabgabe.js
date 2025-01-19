@@ -8,47 +8,39 @@ export function initTippabgabePage(){
     const citySelect = document.getElementById('city');
     const qdriverSelects = Array.from(document.querySelectorAll('[id^="qdriver"]'));
     const driverSelects = Array.from(document.querySelectorAll('[id^="driver"]'));
-    const fDriverSelect = document.getElementById('fDriver');
+    const fdriverSelect = document.getElementById('fdriver');
     const saveButton = document.getElementById('save');
 
     // 1. Dynamische Namen und Städte
-    const tippSpieler = ['Christine', 'Christoph', 'Jürgen'];
+    const tippSpieler = ['Alexander', 'Christine', 'Christoph', 'Jürgen', 'Simon', 'Ergebnis'];
     populateDropdowns([nameSelect], tippSpieler, 'Name auswählen');
 
-    const cities = [
-    "Melbourne",
-    "Shanghai",
-    "Suzuka",
-    "Sakhir",
-    "Dschidda",
-    "Miami",
-    "Imola",
-    "Monte Carlo",
-    "Barcelona",
-    "Montreal",
-    "Spielberg",
-    "Silverstone",
-    "Spa-Francorchamps",
-    "Budapest",
-    "Zandvoort",
-    "Monza",
-    "Baku",
-    "Singapur",
-    "Austin",
-    "Mexiko-Stadt",
-    "São Paulo",
-    "Las Vegas",
-    "Doha",
-    "Abu Dhabi"
-];
-    populateDropdowns([citySelect], cities, 'Stadt auswählen');
+    fetch('/races_get_cities')
+        .then(response => response.json())
+        .then(cities => {
+            populateDropdowns([citySelect], cities, 'Stadt auswählen');
+        })
+        .catch(error => {
+            console.error('Fehler beim Laden der Städte:', error);
+        });
+    // populateDropdowns([citySelect], cities, 'Stadt auswählen');
 
     // 2. Dynamische Fahrer-Dropdowns
-    const fahrerListe = ["Max Verstappen", "Liam Lawson", "George Russell", "Paul Aron", "Charles Leclerc", "Lewis Hamilton", "Lando Norris", "Oscar Piastri", "Fernando Alonso", "Lance Stroll", "Pierre Gasly", "Jack Doohan", "Alexander Albon", "Logan Sargeant", "Isack Hadjar", "Franco Colapinto"];
+    fetch('/get_drivers')
+        .then(response => response.json())
+        .then(drivers => {
+            populateDropdowns(qdriverSelects, drivers, 'Fahrer auswählen');
+            populateDropdowns(driverSelects, drivers, 'Fahrer auswählen');
+            populateDropdowns([fdriverSelect], drivers, 'Fahrer auswählen');
+        })
+        .catch(error => {
+            console.error('Fehler beim Laden der Städte:', error);
+        });
 
-    populateDropdowns(qdriverSelects, fahrerListe, 'Fahrer auswählen');
-    populateDropdowns(driverSelects, fahrerListe, 'Fahrer auswählen');
-    populateDropdowns([fDriverSelect], fahrerListe, 'Fahrer auswählen');
+
+    //populateDropdowns(qdriverSelects, fahrerListe, 'Fahrer auswählen');
+    //populateDropdowns(driverSelects, fahrerListe, 'Fahrer auswählen');
+    //populateDropdowns([fDriverSelect], fahrerListe, 'Fahrer auswählen');
 
     nameSelect.addEventListener('change', fetchSelection);
     citySelect.addEventListener('change', fetchSelection);
@@ -74,7 +66,7 @@ export function initTippabgabePage(){
                    driverSelect.value = data[driverKey];// || "Fahrer";
                 });
 
-                fDriverSelect.value = data[`fdriver`];
+                fdriverSelect.value = data[`fdriver`];
             });
     }
 
@@ -96,7 +88,7 @@ export function initTippabgabePage(){
         });
 
         const fDriver = {};
-        fDriver[`fDriver`] = fDriverSelect.value;
+        fDriver[`fdriver`] = fdriverSelect.value;
 
         fetch('/save_selection', {
             method: 'POST',

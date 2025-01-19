@@ -10,15 +10,29 @@ export function initSprinttippsPage(){
     const saveButton = document.getElementById('save');
 
     // 1. Dynamische Namen und Städte
-    const tippSpieler = ['Christine', 'Christoph', 'Jürgen'];
+    const tippSpieler = ['Alexander', 'Christine', 'Christoph', 'Jürgen', 'Simon', 'Ergebnis'];
     populateDropdowns([nameSelect], tippSpieler, 'Name auswählen');
 
-    const cities = ['Melbourne', 'Schanghai', 'Suzuka', 'Bahrain'];
-    populateDropdowns([citySelect], cities, 'Stadt auswählen');
+    fetch('/sprint_get_cities')
+        .then(response => response.json())
+        .then(cities => {
+            populateDropdowns([citySelect], cities, 'Stadt auswählen');
+        })
+        .catch(error => {
+            console.error('Fehler beim Laden der Städte:', error);
+        });
 
     // 2. Dynamische Fahrer-Dropdowns
-    const fahrerListe = ['Hamilton', 'Verstappen', 'Norris', 'Leclerc'];
-    populateDropdowns(sdriverSelects, fahrerListe, 'Fahrer auswählen');
+    fetch('/get_drivers')
+        .then(response => response.json())
+        .then(drivers => {
+            populateDropdowns(sdriverSelects, drivers, 'Fahrer auswählen');
+        })
+        .catch(error => {
+            console.error('Fehler beim Laden der Städte:', error);
+        });
+    //const fahrerListe = ['Hamilton', 'Verstappen', 'Norris', 'Leclerc'];
+    //populateDropdowns(sdriverSelects, fahrerListe, 'Fahrer auswählen');
 
     nameSelect.addEventListener('change', fetchSelection);
     citySelect.addEventListener('change', fetchSelection);
