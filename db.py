@@ -8,7 +8,9 @@ from flask import g
 def get_db():
     #db = getattr(g, '_database', None)
     if 'db' not in g:
-        g.db = psycopg2.connect("postgresql://tippdatenbank_user:TnbFCl4BR2ZK9fWQRtD481XdSs6EjQXL@dpg-cu555a5ds78s73dvrot0-a.frankfurt-postgres.render.com/tippdatenbank")
+        db_url = os.getenv('DATABASE_URL')
+        g.db = psycopg2.connect(db_url)
+        #g.db = psycopg2.connect("postgresql://tippdatenbank_user:TnbFCl4BR2ZK9fWQRtD481XdSs6EjQXL@dpg-cu555a5ds78s73dvrot0-a.frankfurt-postgres.render.com/tippdatenbank")
     return g.db
 
 def close_connection(exception):
