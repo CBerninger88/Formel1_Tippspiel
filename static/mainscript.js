@@ -23,6 +23,12 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             break;
 
+        case 'wmStand':
+            import('./pages/wmStand.js').then(module => {
+                module.initwmStandPage();
+            });
+            break;
+
         default:
             console.log('Keine spezielle Initialisierung erforderlich');
     }

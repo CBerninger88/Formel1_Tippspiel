@@ -31,8 +31,6 @@ export function initSprinttippsPage(){
         .catch(error => {
             console.error('Fehler beim Laden der Städte:', error);
         });
-    //const fahrerListe = ['Hamilton', 'Verstappen', 'Norris', 'Leclerc'];
-    //populateDropdowns(sdriverSelects, fahrerListe, 'Fahrer auswählen');
 
     nameSelect.addEventListener('change', fetchSelection);
     citySelect.addEventListener('change', fetchSelection);
