@@ -35,8 +35,8 @@ def get_drivers():
     return jsonify(drivers)
 
 
-@wmStand_bp.route('/get_wm_stand', methods=['GET'])
-def get_wm_stand():
+@wmStand_bp.route('/get_wm_stand_api', methods=['GET'])
+def get_wm_stand_api():
     city = request.args.get('city').split(', ')[0]
 
     if city == 'Melbourne':
@@ -68,6 +68,78 @@ def get_wm_stand():
             drivers.update({f'wmdriver{i+1}': driver_name})
             i = i+1
 
+        drivers.update({'success': True})
         return jsonify(drivers)
     else:
-        return jsonify({"error": "Fehler beim Abrufen der WM-Stände"}), 500
+        return jsonify({'success': False, 'message': 'Keine Daten von API erhalten'}), 500
+
+
+
+@wmStand_bp.route('/get_wm_stand')
+def get_wm_stand():
+
+    city = request.args.get('city').split(', ')[0]
+
+    db = get_db()
+    cursor = db.cursor()
+
+    # 2. race_id anhand der Stadt finden
+    cursor.execute('SELECT id FROM races WHERE city = %s', (city,))
+    race_result = cursor.fetchone()
+    if not race_result:
+        drivers = {f'wmdriver{i + 1}': "" for i in range(20)}
+        return jsonify(drivers)
+        #return jsonify({'success': False, 'message': 'Race not found'}), 400
+    race_id = race_result[0]
+
+    # 3. Qualifying-Tipps aus der QualiTips-Tabelle auslesen
+    cursor.execute("""
+           SELECT driver1, driver2, driver3, driver4, driver5, driver6, driver7, driver8, driver9, driver10, driver11,
+                    driver12, driver13, driver14, driver15, driver16, driver17, driver18, driver19, driver20
+           FROM wmstand
+           WHERE race_id = %s
+           ORDER BY id DESC LIMIT 1
+       """, (race_id,))
+    result = cursor.fetchone()
+
+
+    if result:
+        # Dynamisch Fahrer in ein Dictionary packen
+        drivers = {f'wmdriver{i+1}': result[i] for i in range(len(result))}
+    else:
+        # Dynamisch leere Fahrer zurückgeben
+        drivers = {f'wmdriver{i + 1}': "" for i in range(20)}
+
+    return jsonify(drivers)
+
+
+
+@wmStand_bp.route('/save_wm_stand', methods=['POST'])
+def save_wm_stand():
+    data = request.get_json()
+    city = data['city'].split(', ')[0]
+
+    # Race Fahrer 1-3 auslesen (Standardwert ist ein leerer String, falls nicht übergeben)
+    drivers = [data.get(f'wmdriver{i + 1}', '') for i in range(20)]
+
+    db = get_db()
+    cursor = db.cursor()
+
+    # 1. race_id ermitteln
+    cursor.execute('SELECT id FROM races WHERE city = %s', (city,))
+    race_result = cursor.fetchone()
+    if not race_result:
+        return jsonify({'success': False, 'message': 'Race not found'}), 400
+    race_id = race_result[0]
+
+    # 2. Daten in WMStand speichern
+    cursor.execute('''
+            INSERT INTO wmstand (race_id, driver1, driver2, driver3, driver4, driver5, driver6, driver7, driver8, 
+                                    driver9, driver10, driver11, driver12, driver13, driver14, driver15, driver16,
+                                    driver17, driver18, driver19, driver20)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+    ''', (race_id, *drivers))
+
+    db.commit()
+
+    return jsonify({'success': True})

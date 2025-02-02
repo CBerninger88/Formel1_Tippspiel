@@ -6,8 +6,12 @@ export function initwmStandPage(){
     const citySelect = document.getElementById('city');
     const wmdriverSelects = Array.from(document.querySelectorAll('[id^="wmdriver"]'));
     const getWMStandBtn = document.getElementById('getWMStand');
+    const saveWMStandBtn = document.getElementById('wmStand');
 
     getWMStandBtn.addEventListener('click', fetchSelection);
+    saveWMStandBtn.addEventListener('click', saveSelection);
+    citySelect.addEventListener('change', fetchWMStand);
+
 
     // 2. Dynamische Rennen-Dropdowns
     fetch('/wmStand_get_cities')
@@ -34,6 +38,23 @@ export function initwmStandPage(){
     function fetchSelection() {
         const selectedCity = citySelect.value;
 
+        fetch(`/get_wm_stand_api?city=${selectedCity}`)
+            .then(response => response.json())
+            .then(data => {
+                wmdriverSelects.forEach((wmDriverSelect, index) => {
+                   const wmDriverKey = `wmdriver${index + 1}`;
+                   wmDriverSelect.value = data[wmDriverKey];// || "Fahrer";
+                });
+                if (!data.success) {
+                    alert(data.message);
+                }
+            });
+    }
+
+
+        function fetchWMStand() {
+        const selectedCity = citySelect.value;
+
         fetch(`/get_wm_stand?city=${selectedCity}`)
             .then(response => response.json())
             .then(data => {
@@ -42,6 +63,32 @@ export function initwmStandPage(){
                    wmDriverSelect.value = data[wmDriverKey];// || "Fahrer";
                 });
             });
+    }
+
+
+    function saveSelection() {
+        const city = citySelect.value;
+        const wmDriverData = wmdriverSelects.map(driver => driver.value);
+
+        // Dictionary mit Keys (driver1, driver2, etc.) generieren
+        const wmDrivers = {};
+        wmDriverData.forEach((driver, index) => {
+            wmDrivers[`wmdriver${index + 1}`] = driver;
+        });
+
+        fetch('/save_wm_stand', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({city, ...wmDrivers}),
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Selection saved successfully!');
+            }
+        });
     }
 
 }
