@@ -9,7 +9,7 @@ def index():
 
 @home_bp.route('/get_tipps')
 def get_tipps():
-    city = request.args.get('city')
+    city = request.args.get('city').split(', ')[0]
     db = get_db()
     cursor = db.cursor()
 
@@ -93,10 +93,10 @@ def get_tipps():
 def get_cities():
     db = get_db()
     cursor = db.cursor()
-    cursor.execute("SELECT city FROM races ORDER BY date ASC;")
+    cursor.execute("SELECT city, date FROM races ORDER BY date ASC;")
     result = cursor.fetchall()
 
     # Liste der Städte extrahieren
-    cities = [row[0] for row in result]
+    cities = [f'{row[0]}, {row[1]}' for row in result]
 
     return jsonify(cities)

@@ -12,7 +12,7 @@ def tippabgabe():
 @tippabgabe_bp.route('/get_selection')
 def get_selection():
     name = request.args.get('name')
-    city = request.args.get('city')
+    city = request.args.get('city').split(', ')[0]
 
     db = get_db()
     cursor = db.cursor()
@@ -94,7 +94,7 @@ def get_selection():
 def save_selection():
     data = request.get_json()
     name = data['name']
-    city = data['city']
+    city = data['city'].split(', ')[0]
 
     # Quali Fahrer 1-4 auslesen (Standardwert ist ein leerer String, falls nicht übergeben)
     qdrivers = [data.get(f'qdriver{i+1}', '') for i in range(4)]
@@ -146,11 +146,11 @@ def save_selection():
 def get_cities():
     db = get_db()
     cursor = db.cursor()
-    cursor.execute("SELECT city FROM races ORDER BY date ASC;")
+    cursor.execute("SELECT city, date FROM races ORDER BY date ASC;")
     result = cursor.fetchall()
 
     # Liste der Städte extrahieren
-    cities = [row[0] for row in result]
+    cities = [f'{row[0]}, {row[1]}' for row in result]
 
     return jsonify(cities)
 

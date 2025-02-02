@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, jsonify
+from flask import Blueprint, render_template, request, jsonify
 import requests
 from db import get_db
 
@@ -14,11 +14,11 @@ def wmstand():
 def get_cities():
     db = get_db()
     cursor = db.cursor()
-    cursor.execute("SELECT city FROM races ORDER BY date ASC;")
+    cursor.execute("SELECT city, date FROM races ORDER BY date ASC;")
     result = cursor.fetchall()
 
     # Liste der Städte extrahieren
-    cities = [row[0] for row in result]
+    cities = [f'{row[0]}, {row[1]}' for row in result]
 
     return jsonify(cities)
 
@@ -37,7 +37,24 @@ def get_drivers():
 
 @wmStand_bp.route('/get_wm_stand', methods=['GET'])
 def get_wm_stand():
-    url = "https://ergast.com/api/f1/current/driverStandings.json"
+    city = request.args.get('city').split(', ')[0]
+
+    if city == 'Melbourne':
+        return jsonify({'success': False, 'message': 'Kein WM Stand bei erstem Rennen'}), 400
+
+    db = get_db()
+    cursor = db.cursor()
+
+    cursor.execute('SELECT id FROM races WHERE city = %s', (city,))
+    race_result = cursor.fetchone()
+    if not race_result:
+        return jsonify({'success': False, 'message': 'Race not found'}), 400
+    race_id = race_result[0]
+
+    season = 2024
+    round_number = race_id-1
+
+    url = f"https://ergast.com/api/f1/{season}/{round_number}/driverStandings.json"
     response = requests.get(url)
 
     if response.status_code == 200:

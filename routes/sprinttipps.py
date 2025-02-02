@@ -12,7 +12,7 @@ def sprinttipps():
 @sprinttipps_bp.route('/get_sprinttipps')
 def get_sprinttipps():
     name = request.args.get('name')
-    city = request.args.get('city')
+    city = request.args.get('city').split(', ')[0]
 
     db = get_db()
     cursor = db.cursor()
@@ -58,7 +58,7 @@ def get_sprinttipps():
 def save_sprinttipps():
     data = request.get_json()
     name = data['name']
-    city = data['city']
+    city = data['city'].split(', ')[0]
 
     # Race Fahrer 1-3 auslesen (Standardwert ist ein leerer String, falls nicht übergeben)
     drivers = [data.get(f'sdriver{i + 1}', '') for i in range(8)]
@@ -95,11 +95,11 @@ def save_sprinttipps():
 def get_cities():
     db = get_db()
     cursor = db.cursor()
-    cursor.execute("SELECT city FROM races WHERE is_sprint ORDER BY date ASC;")
+    cursor.execute("SELECT city, date FROM races WHERE is_sprint ORDER BY date ASC;")
     result = cursor.fetchall()
 
     # Liste der Städte extrahieren
-    cities = [row[0] for row in result]
+    cities = [f'{row[0]}, {row[1]}' for row in result]
 
     return jsonify(cities)
 

@@ -32,9 +32,9 @@ export function initwmStandPage(){
         });
 
     function fetchSelection() {
-        //const selectedCity = citySelect.value;
+        const selectedCity = citySelect.value;
 
-        fetch(`/get_wm_stand`)
+        fetch(`/get_wm_stand?city=${selectedCity}`)
             .then(response => response.json())
             .then(data => {
                 wmdriverSelects.forEach((wmDriverSelect, index) => {
