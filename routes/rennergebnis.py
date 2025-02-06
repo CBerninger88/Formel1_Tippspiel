@@ -113,21 +113,23 @@ def get_punkte():
 
 
     # Den WM Stand holen
-    cursor.execute("""
-               SELECT driver1, driver2, driver3, driver4, driver5, driver6, driver7, driver8, driver9, driver10, driver11,
-                        driver12, driver13, driver14, driver15, driver16, driver17, driver18, driver19, driver20
-               FROM wmstand
-               WHERE race_id = %s
-               ORDER BY id DESC LIMIT 1
-           """, (race_id,))
-    wmStand = cursor.fetchone()
-    if not wmStand:
-        return jsonify({'success': False, 'message': 'Es gibt keinen WM Stand für dieses Rennen'}), 400
-
+    if city != 'Melbourne':
+        cursor.execute("""
+                   SELECT driver1, driver2, driver3, driver4, driver5, driver6, driver7, driver8, driver9, driver10, driver11,
+                            driver12, driver13, driver14, driver15, driver16, driver17, driver18, driver19, driver20
+                   FROM wmstand
+                   WHERE race_id = %s
+                   ORDER BY id DESC LIMIT 1
+               """, (race_id,))
+        wmStand = cursor.fetchone()
+        if not wmStand:
+            return jsonify({'success': False, 'message': 'Es gibt keinen WM Stand für dieses Rennen'}), 400
+    else:
+        wmStand = None
 
     qualiPunkte = calculate_qualipunkte(qualitipps)
     fastestLabPunkte = calculate_fastestLabPunkte(fastestlabtipps)
-    racePunkte = calculate_racepunkte(racetipps, wmStand)
+    racePunkte = calculate_racepunkte(racetipps, wmStand, city)
 
     ergebnis = {}
     for name in names:
@@ -194,7 +196,7 @@ def calculate_fastestLabPunkte(fastestlabtipps):
 
 
 
-def calculate_racepunkte(racetipps, wmStand):
+def calculate_racepunkte(racetipps, wmStand, city):
 
     racepunkte = {}
 
@@ -232,10 +234,14 @@ def calculate_racepunkte(racetipps, wmStand):
         # Berechne Punkte
         trefferpunkte = 0
 
-        for idx in same_position:
-            if tuple1[idx] in wmStand:
-                j = wmStand.index(tuple1[idx])
-                trefferpunkte = trefferpunkte + abs(j-idx) * 10
+
+        if city == 'Melbourne':
+            trefferpunkte = len(same_position) * 10
+        else:
+            for idx in same_position:
+                if tuple1[idx] in wmStand:
+                    j = wmStand.index(tuple1[idx])
+                    trefferpunkte = trefferpunkte + abs(j-idx) * 10
 
         punkte_fastTreffer = (len(position_before) + len(position_after)) * 8
         punkte_topTen = len(different_position) * 4
