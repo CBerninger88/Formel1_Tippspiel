@@ -29,6 +29,11 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             break;
 
+        case 'rennergebnis':
+            import('./pages/rennergebnis.js').then(module => {
+                module.initRennergebnisPage();
+            });
+
         default:
             console.log('Keine spezielle Initialisierung erforderlich');
     }
