@@ -29,12 +29,12 @@ def get_cities():
 def get_punkte():
     data = request.get_json()
     city = data.get('city').split(', ')[0]
-    names = data.get('names')
+    calcNew = data.get('calcNew')
 
     db = get_db()
     cursor = db.cursor()
 
-    # 2. race_id ermitteln
+    # 1. race_id ermitteln
     cursor.execute('SELECT id FROM races WHERE city = %s', (city,))
     race_result = cursor.fetchone()
     if not race_result:
@@ -42,214 +42,321 @@ def get_punkte():
     race_id = race_result[0]
 
 
-    # 3. Qualitipps ermitteln
-    cursor.execute(f'''
-                 WITH LatestEntries AS (
-                    SELECT q.user_id, q.driver1, q.driver2, q.driver3, q.driver4,
-                        ROW_NUMBER() OVER (PARTITION BY q.user_id ORDER BY q.id DESC) as rn
-                    FROM qualitipps q
-                    WHERE q.race_id = %s
-                )
-                SELECT u.name, r.driver1, r.driver2, r.driver3, r.driver4
-                FROM LatestEntries r
-                JOIN users u ON u.id = r.user_id
-                WHERE rn = 1;
-                ''', (race_id,))
+    # 2. Existiert race_id in der tipppunkte Tabelle
+    cursor.execute("""
+        SELECT EXISTS (SELECT 1 FROM tipppunkte WHERE race_id = %s)
+    """, (race_id,))
+    exists = cursor.fetchone()[0]
 
-    qualitipps = cursor.fetchall()
-    qualitipps = {tup[0]: tup[1:] for tup in qualitipps}
-    if not qualitipps:
-        return jsonify({'success': False, 'message': 'Es wurden noch keine Tipps abgegeben für dieses Rennen'}), 400
+    if exists and not calcNew:
 
-    if 'Ergebnis' not in qualitipps:
-        return jsonify({'success': False, 'message': 'Es wurden noch keine Ergebnis für dieses Rennen eingetragen'}), 400
-
-
-    # 3. Racetipps ermitteln
-    cursor.execute(f'''
-                 WITH LatestEntries AS (
-                    SELECT r.user_id, r.driver1, r.driver2, r.driver3, r.driver4, r.driver5, r.driver6, r.driver7, r.driver8, r.driver9, r.driver10,
-                        ROW_NUMBER() OVER (PARTITION BY r.user_id ORDER BY r.id DESC) as rn
-                    FROM racetipps r
-                    WHERE r.race_id = %s
-                )
-                SELECT u.name, r.driver1, r.driver2, r.driver3, r.driver4, r.driver5, r.driver6, r.driver7, r.driver8, r.driver9, r.driver10
-                FROM LatestEntries r
-                JOIN users u ON u.id = r.user_id
-                WHERE rn = 1;
-                ''', (race_id,))
-
-    racetipps = cursor.fetchall()
-    racetipps = {tup[0]: tup[1:] for tup in racetipps}
-    if not racetipps:
-        return jsonify({'success': False, 'message': 'Es wurden noch keine Tipps abgegeben für dieses Rennen'}), 400
-
-    if 'Ergebnis' not in racetipps:
-        return jsonify(
-            {'success': False, 'message': 'Es wurden noch keine Ergebnis für dieses Rennen eingetragen'}), 400
-
-    # 3. SchnellsteRundeTipp ermitteln
-    cursor.execute(f'''
-                     WITH LatestEntries AS (
-                        SELECT fl.user_id, fl.driver1,
-                            ROW_NUMBER() OVER (PARTITION BY fl.user_id ORDER BY fl.id DESC) as rn
-                        FROM fastestlab fl
-                        WHERE fl.race_id = %s
-                    )
-                    SELECT u.name, r.driver1
-                    FROM LatestEntries r
-                    JOIN users u ON u.id = r.user_id
-                    WHERE rn = 1;
-                    ''', (race_id,))
-
-
-    fastestlabtipps = cursor.fetchall()
-    fastestlabtipps = {tup[0]: tup[1:] for tup in fastestlabtipps}
-    if not fastestlabtipps:
-        return jsonify({'success': False, 'message': 'Es wurden noch keine Tipps abgegeben für dieses Rennen'}), 400
-
-    if 'Ergebnis' not in fastestlabtipps:
-        return jsonify({'success': False, 'message': 'Es wurden noch keine Ergebnis für dieses Rennen eingetragen'}), 400
-
-
-    # Den WM Stand holen
-    if city != 'Melbourne':
         cursor.execute("""
-                   SELECT driver1, driver2, driver3, driver4, driver5, driver6, driver7, driver8, driver9, driver10, driver11,
-                            driver12, driver13, driver14, driver15, driver16, driver17, driver18, driver19, driver20
-                   FROM wmstand
-                   WHERE race_id = %s
-                   ORDER BY id DESC LIMIT 1
-               """, (race_id,))
-        wmStand = cursor.fetchone()
-        if not wmStand:
-            return jsonify({'success': False, 'message': 'Es gibt keinen WM Stand für dieses Rennen'}), 400
+            SELECT t.*, u.name
+            FROM tipppunkte t
+            JOIN users u ON t.user_id = u.id
+            WHERE t.race_id = %s
+            AND t.id IN (
+                SELECT MAX(id) 
+                FROM tipppunkte
+                WHERE race_id = %s
+                GROUP BY user_id
+            )
+            ORDER BY u.name;
+        """, (race_id, race_id))
+
+        # Alle letzten Einträge abrufen
+        rows = cursor.fetchall()
+
+        # Ausgabe der Ergebnisse
+        result_dict = {}
+        quali_keys = ['qpunkte1', 'qpunkte2', 'qpunkte3', 'qpunkte4']
+        race_keys = ['rpunkte1', 'rpunkte2', 'rpunkte3', 'rpunkte4', 'rpunkte5', 'rpunkte6', 'rpunkte7', 'rpunkte8',
+                     'rpunkte9', 'rpunkte10']
+
+        if rows:
+            for row in rows:
+                name = row[-1]  # Name ist die letzte Spalte
+                points = tuple(row[2:-2])  # Punkte sind die Spalten 2 bis vorletzte (qpunkte, rpunkte, fpunkte)
+                result_dict[name] = {}
+                for i, qkey in enumerate(quali_keys):
+                    result_dict[name][qkey] = points[i]
+
+                for i, rkey in enumerate(race_keys):
+                    result_dict[name][rkey] = points[i+4]
+
+                result_dict[name]['fpunkte'] = points[-1]
+
+        else:
+            print(f"Keine Daten für race_id {race_id} gefunden.")
+
+        ergebnis = calculate_punkte(result_dict)
+
     else:
-        wmStand = None
+        ergebnis = insertPunkteinDB(race_id, city, db)
 
-    qualiPunkte = calculate_qualipunkte(qualitipps)
-    fastestLabPunkte = calculate_fastestLabPunkte(fastestlabtipps)
-    racePunkte = calculate_racepunkte(racetipps, wmStand, city)
 
-    ergebnis = {}
-    for name in names:
-        gesamtpunkte = 0
-        if name in qualiPunkte:
-            gesamtpunkte = qualiPunkte[name] + fastestLabPunkte[name] + racePunkte[name]
-        ergebnis.update({name: gesamtpunkte})
 
-    #ergebnis = {names[0]: 10, names[1]: 20, names[2]: 30, names[3]: 40, names[4]: 50}
+
 
     return jsonify(ergebnis)
 
 
 
-def calculate_qualipunkte(qualitipps):
+def insertPunkteinDB(race_id, city, db):
+
+    cursor = db.cursor()
+
+
+    # 3. Qualitipps ermitteln
+    cursor.execute(f'''
+                     WITH LatestEntries AS (
+                        SELECT q.user_id, q.driver1, q.driver2, q.driver3, q.driver4,
+                            ROW_NUMBER() OVER (PARTITION BY q.user_id ORDER BY q.id DESC) as rn
+                        FROM qualitipps q
+                        WHERE q.race_id = %s
+                    )
+                    SELECT u.name, r.driver1, r.driver2, r.driver3, r.driver4
+                    FROM LatestEntries r
+                    JOIN users u ON u.id = r.user_id
+                    WHERE rn = 1;
+                    ''', (race_id,))
+
+    qualitipps = cursor.fetchall()
+    qualitipps = {tup[0]: tup[1:] for tup in qualitipps}
+    if not qualitipps:
+        return {'success': False, 'message': 'Es wurden noch keine Tipps für dieses Rennen abgegeben'}
+
+    if 'Ergebnis' not in qualitipps:
+        return {'success': False, 'message': 'Es wurden noch keine Ergebnis für dieses Rennen eingetragen'}
+
+    # 3. Racetipps ermitteln
+    cursor.execute(f'''
+                     WITH LatestEntries AS (
+                        SELECT r.user_id, r.driver1, r.driver2, r.driver3, r.driver4, r.driver5, r.driver6, r.driver7, r.driver8, r.driver9, r.driver10,
+                            ROW_NUMBER() OVER (PARTITION BY r.user_id ORDER BY r.id DESC) as rn
+                        FROM racetipps r
+                        WHERE r.race_id = %s
+                    )
+                    SELECT u.name, r.driver1, r.driver2, r.driver3, r.driver4, r.driver5, r.driver6, r.driver7, r.driver8, r.driver9, r.driver10
+                    FROM LatestEntries r
+                    JOIN users u ON u.id = r.user_id
+                    WHERE rn = 1;
+                    ''', (race_id,))
+
+    racetipps = cursor.fetchall()
+    racetipps = {tup[0]: tup[1:] for tup in racetipps}
+    if not racetipps:
+        return {'success': False, 'message': 'Es wurden noch keine Tipps für dieses Rennen abgegeben'}
+
+    if 'Ergebnis' not in racetipps:
+        return {'success': False, 'message': 'Es wurden noch keine Ergebnis für dieses Rennen eingetragen'}
+
+    # 3. SchnellsteRundeTipp ermitteln
+    cursor.execute(f'''
+                         WITH LatestEntries AS (
+                            SELECT fl.user_id, fl.driver1,
+                                ROW_NUMBER() OVER (PARTITION BY fl.user_id ORDER BY fl.id DESC) as rn
+                            FROM fastestlab fl
+                            WHERE fl.race_id = %s
+                        )
+                        SELECT u.name, r.driver1
+                        FROM LatestEntries r
+                        JOIN users u ON u.id = r.user_id
+                        WHERE rn = 1;
+                        ''', (race_id,))
+
+    fastestlabtipps = cursor.fetchall()
+    fastestlabtipps = {tup[0]: tup[1:] for tup in fastestlabtipps}
+    if not fastestlabtipps:
+        return {'success': False, 'message': 'Es wurden noch keine Tipps für die schnellste Runde abgegeben'}
+
+    if 'Ergebnis' not in fastestlabtipps:
+        return {'success': False, 'message': 'Es wurden noch keine Ergebnis für die schnellste Runde eingetragen'}
+
+    # Den WM Stand holen
+    if city != 'Melbourne':
+        cursor.execute("""
+                       SELECT driver1, driver2, driver3, driver4, driver5, driver6, driver7, driver8, driver9, driver10, driver11,
+                                driver12, driver13, driver14, driver15, driver16, driver17, driver18, driver19, driver20
+                       FROM wmstand
+                       WHERE race_id = %s
+                       ORDER BY id DESC LIMIT 1
+                   """, (race_id,))
+        wmStand = cursor.fetchone()
+        if not wmStand:
+            return {'success': False, 'message': 'Es gibt keinen WM Stand für dieses Rennen'}
+    else:
+        wmStand = None
+
+    punkte = {}
+    calculate_qualipunkte(qualitipps, punkte)
+    message, success = calculate_racepunkte(racetipps, wmStand, punkte, city)
+    calculate_fastestLabPunkte(fastestlabtipps, punkte)
+
+    # 3. Daten in FastestLab speichern
+
+    sql = """
+            INSERT INTO tipppunkte (
+                user_id, race_id, qpunkte1, qpunkte2, qpunkte3, qpunkte4,
+                rpunkte1, rpunkte2, rpunkte3, rpunkte4, rpunkte5, rpunkte6,
+                rpunkte7, rpunkte8, rpunkte9, rpunkte10, fpunkte
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """
+
+    for name in punkte.keys():
+
+        cursor.execute('SELECT id FROM users WHERE name = %s', (name,))
+        user_result = cursor.fetchone()
+        if not user_result:
+            return {'success': False, 'message': 'User not found'}
+        user_id = user_result[0]
+
+        tipppunkte = punkte.get(name)
+        values = (
+            user_id,  # Hier könntest du eine tatsächliche ID anstelle des Namens verwenden
+            race_id,
+            tipppunkte.get('qpunkte1', 0), tipppunkte.get('qpunkte2', 0), tipppunkte.get('qpunkte3', 0),
+            tipppunkte.get('qpunkte4', 0), tipppunkte.get('rpunkte1', 0), tipppunkte.get('rpunkte2', 0),
+            tipppunkte.get('rpunkte3', 0), tipppunkte.get('rpunkte4', 0), tipppunkte.get('rpunkte5', 0),
+            tipppunkte.get('rpunkte6', 0), tipppunkte.get('rpunkte7', 0), tipppunkte.get('rpunkte8', 0),
+            tipppunkte.get('rpunkte9', 0), tipppunkte.get('rpunkte10', 0), tipppunkte.get('fpunkte', 0)
+        )
+        cursor.execute(sql, values)
+
+    db.commit()
+
+    ergebnis = calculate_punkte(punkte)
+    ergebnis.update({'success': success, 'message': message})
+    return ergebnis
+
+
+def calculate_punkte(punkte):
+
+    ergebnis = {}
+
+    quali_keys = ['qpunkte1', 'qpunkte2', 'qpunkte3', 'qpunkte4']
+    race_keys = ['rpunkte1', 'rpunkte2', 'rpunkte3', 'rpunkte4', 'rpunkte5', 'rpunkte6', 'rpunkte7', 'rpunkte8',
+                  'rpunkte9', 'rpunkte10']
+    for name in punkte.keys():
+
+        ergebnis.update({name: {}})
+
+        qPunkte = 0
+        for qkey in quali_keys:
+            qPunkte = qPunkte + punkte[name][qkey]
+        ergebnis[name].update({'qPunkte': qPunkte})
+
+        rPunkte = 0
+        for rkey in race_keys:
+            rPunkte = rPunkte + punkte[name][rkey]
+        ergebnis[name].update({'rPunkte': rPunkte})
+
+        fPunkte = punkte[name]['fpunkte']
+        ergebnis[name].update({'fPunkte': fPunkte})
+
+        gesamtPunkte = qPunkte + rPunkte + fPunkte
+        ergebnis[name].update({'gesamtPunkte': gesamtPunkte})
+
+
+    ergebnis.update({'success': True, 'message': 'Alles ok'})
+    return ergebnis
+
+
+
+
+def calculate_qualipunkte(qualitipps, punkte):
 
     qualipunkte = {}
+    driver_key = ['qpunkte1', 'qpunkte2', 'qpunkte3', 'qpunkte4']
+    trefferpunkte = [25, 20, 15, 10]
 
     for key in qualitipps:
         if key == 'Ergebnis':
             continue
-
-        tuple1 = qualitipps[key]
-        tuple2 = qualitipps['Ergebnis']
+        punkte.update({key: {}})
+        tipps = qualitipps[key]
+        ergebnis = qualitipps['Ergebnis']
 
         # Gleiche Einträge an der gleichen Stelle
-        same_position = [i for i in range(len(tuple1)) if tuple1[i] == tuple2[i]]
 
-        # Gleiche Einträge, aber an unterschiedlichen Stellen
-        different_position = [
-            i for i in range(len(tuple1))
-            if tuple1[i] in tuple2 and i != tuple2.index(tuple1[i])
-        ]
-
-        trefferpunkte = [25, 20, 15, 10]
-        punkte_treffer = sum([trefferpunkte[i] for i in same_position])
-
-        punkte_topvier = len(different_position) * 5
-
-        punkte = punkte_treffer + punkte_topvier
-
-        qualipunkte.update({key: punkte})
-
-    return qualipunkte
+        for i, tipp in enumerate(tipps):
+            if tipp == ergebnis[i]:
+                punkte[key].update({driver_key[i]: trefferpunkte[i] })
+            elif tipp in ergebnis:
+                punkte[key].update({driver_key[i]: 4})
+            else:
+                punkte[key].update({driver_key[i]: 0})
 
 
-def calculate_fastestLabPunkte(fastestlabtipps):
+
+def calculate_fastestLabPunkte(fastestlabtipps, punkte):
     fastestlabpunkte = {}
 
-    for key in fastestlabtipps:
-        if key == 'Ergebnis':
+
+    for name in fastestlabtipps:
+        if name == 'Ergebnis':
             continue
 
-        tuple1 = fastestlabtipps[key]
-        tuple2 = fastestlabtipps['Ergebnis']
-        punkte = 0
+        tipp = fastestlabtipps[name]
+        ergebnis = fastestlabtipps['Ergebnis']
 
-        if tuple1 == tuple2:
-            punkte = 15
 
-        fastestlabpunkte.update({key: punkte})
-
-    return fastestlabpunkte
+        if tipp == ergebnis:
+            punkte[name].update({'fpunkte': 15})
+        else:
+            punkte[name].update({'fpunkte': 0})
 
 
 
-def calculate_racepunkte(racetipps, wmStand, city):
+def calculate_racepunkte(racetipps, wmStand, punkte, city):
 
-    racepunkte = {}
+    driver_key = ['rpunkte1', 'rpunkte2', 'rpunkte3', 'rpunkte4', 'rpunkte5', 'rpunkte6', 'rpunkte7', 'rpunkte8',
+                  'rpunkte9', 'rpunkte10']
 
-    for key in racetipps:
-        if key == 'Ergebnis':
+    for name in racetipps:
+        if name == 'Ergebnis':
             continue
 
-        tuple1 = racetipps[key]
-        tuple2 = racetipps['Ergebnis']
+        tipps = racetipps[name]
+        ergebnis = racetipps['Ergebnis']
+
+        if name not in punkte:
+            punkte.update({name: {}})
 
         # Gleiche Einträge an der gleichen Stelle
-        same_position = [i for i in range(len(tuple1)) if tuple1[i] == tuple2[i]]
 
-        # Einträge sind eine Position vorher
-        position_before = [i for i in range(len(tuple1)-1) if tuple1[i] == tuple2[i+1]]
+        for i, tipp in enumerate(tipps):
+            if tipp == ergebnis[i]:
 
-        # Einträge sind eine Position nachher
-        position_after = [i+1 for i in range(len(tuple1) - 1) if tuple1[i+1] == tuple2[i]]
+                if city == 'Melbourne':
+                    punkte[name].update({driver_key[i]: 10})
+                else:
+                    if wmStand is not None and tipp in wmStand:
+                        j = wmStand.index(tipp)
+                        punkte[name].update({driver_key[i]: abs(j - i) * 10})
+                    else:
+                        punkte[name].update({driver_key[i]: 0})
+                        message = 'Kein WM Stand vorhanden'
+                        success = False
 
-        # Gleiche Einträge, aber an unterschiedlichen Stellen
-        #different_position = [
-        #    i for i in range(len(tuple1))
-        #    if tuple1[i] in tuple2 and i != tuple2.index(tuple1[i]) and i != tuple2.index(tuple1[i])-1 and i != tuple2.index(tuple1[i])+1
-        #]
-        different_position = []
-        for i, val1 in enumerate(tuple1):
-            if val1 in tuple2:
-                # Index des Wertes im zweiten Tupel
-                j = tuple2.index(val1)
+            elif tipp != ergebnis[i] and tipp in ergebnis:
+                if wmStand is not None and tipp in wmStand:
+                    j = wmStand.index(tipp)
+                    if abs(i-j) > 1:
+                        punkte[name].update({driver_key[i]: 4})
+                    else:
+                        punkte[name].update({driver_key[i]: 8})
+                else:
+                    if city == 'Melbourne':
+                        punkte[name].update({driver_key[i]: 4})
+                    else:
+                        punkte[name].update({driver_key[i]: 0})
+                        message = 'Kein WM Stand vorhanden'
+                        success = False
 
-                # Bedingung: Nicht gleiche Stelle oder Nachbarposition
-                if abs(i - j) > 1:
-                    different_position.append(val1)
+            else:
+                punkte[name].update({driver_key[i]: 0})
+                message = f'Der Fahrer {tipp} von {name} ist nicht in der WM Liste'
+                success = False
 
-        # Berechne Punkte
-        trefferpunkte = 0
-
-
-        if city == 'Melbourne':
-            trefferpunkte = len(same_position) * 10
-        else:
-            for idx in same_position:
-                if tuple1[idx] in wmStand:
-                    j = wmStand.index(tuple1[idx])
-                    trefferpunkte = trefferpunkte + abs(j-idx) * 10
-
-        punkte_fastTreffer = (len(position_before) + len(position_after)) * 8
-        punkte_topTen = len(different_position) * 4
-
-
-        punkte = trefferpunkte + punkte_fastTreffer + punkte_topTen
-
-        racepunkte.update({key: punkte})
-
-    return racepunkte
-
+    return message, success
