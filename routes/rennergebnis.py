@@ -24,6 +24,168 @@ def get_cities():
 
     return jsonify(cities)
 
+@rennergebnis_bp.route('/get_users_rennergebnis', methods=['GET'])
+def get_users():
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("SELECT name FROM users ORDER BY id ASC;")
+    result = cursor.fetchall()
+
+    # Liste der Städte extrahieren
+    users = [row[0] for row in result]
+
+    return jsonify(users)
+
+
+@rennergebnis_bp.route('/get_einzeltipps')
+def get_einzeltipps():
+    city = request.args.get('city').split(', ')[0]
+    name = request.args.get('name')
+    db = get_db()
+    cursor = db.cursor()
+
+    # 2. race_id ermitteln
+    cursor.execute('SELECT id FROM races WHERE city = %s', (city,))
+    race_result = cursor.fetchone()
+    if not race_result:
+        return jsonify({'success': False, 'message': 'Race not found'}), 400
+    race_id = race_result[0]
+
+    cursor.execute('SELECT id FROM users WHERE name = %s', (name,))
+    user_result = cursor.fetchone()
+    if not user_result:
+        return jsonify({'success': False, 'message': 'User not found'}), 400
+    user_id = user_result[0]
+
+    cursor.execute('SELECT id FROM users WHERE name = %s', ('Ergebnis',))
+    ergebnis_result = cursor.fetchone()
+    if not user_result:
+        return jsonify({'success': False, 'message': 'User not found'}), 400
+    ergebnis_id = ergebnis_result[0]
+
+    ergebnis = {}
+
+    user_ids = (user_id, ergebnis_id)  # Ersetze user_id1 und user_id2 durch die gewünschten Werte
+
+    cursor.execute(f'''
+        WITH LatestEntries AS (
+            SELECT q.user_id, q.driver1, q.driver2, q.driver3, q.driver4,
+                ROW_NUMBER() OVER (PARTITION BY q.user_id ORDER BY q.id DESC) as rn
+            FROM qualitipps q
+            WHERE q.race_id = %s
+            AND q.user_id IN %s
+        )
+        SELECT u.name, q.driver1, q.driver2, q.driver3, q.driver4
+        FROM LatestEntries q
+        JOIN users u ON u.id = q.user_id
+        WHERE rn = 1;
+    ''', (race_id, user_ids))
+
+    qresults = cursor.fetchall()
+
+    cursor.execute(f'''
+             WITH LatestEntries AS (
+                SELECT r.user_id, r.driver1, r.driver2, r.driver3, r.driver4, r.driver5, r.driver6, r.driver7, r.driver8, r.driver9, r.driver10,
+                    ROW_NUMBER() OVER (PARTITION BY r.user_id ORDER BY r.id DESC) as rn
+                FROM racetipps r
+                WHERE r.race_id = %s
+                AND r.user_id IN %s
+            )
+            SELECT u.name, r.driver1, r.driver2, r.driver3, r.driver4, r.driver5, r.driver6, r.driver7, r.driver8, r.driver9, r.driver10
+            FROM LatestEntries r
+            JOIN users u ON u.id = r.user_id
+            WHERE rn = 1;
+            ''', (race_id, user_ids))
+
+    rresults = cursor.fetchall()
+
+    cursor.execute(f'''
+                 WITH LatestEntries AS (
+                    SELECT f.user_id, f.driver1,
+                        ROW_NUMBER() OVER (PARTITION BY f.user_id ORDER BY f.id DESC) as rn
+                    FROM fastestlab f
+                    WHERE f.race_id = %s
+                    AND f.user_id IN %s
+                )
+                SELECT u.name, f.driver1
+                FROM LatestEntries f
+                JOIN users u ON u.id = f.user_id
+                WHERE rn = 1;
+                ''', (race_id, user_ids))
+
+    fresults = cursor.fetchall()
+
+    # 2. Existiert race_id in der tipppunkte Tabelle
+    cursor.execute("""
+            SELECT EXISTS (SELECT 1 FROM tipppunkte WHERE race_id = %s)
+        """, (race_id,))
+    exists = cursor.fetchone()[0]
+
+    if exists:
+        cursor.execute("""
+            SELECT t.*, u.name
+            FROM tipppunkte t
+            JOIN users u ON t.user_id = u.id
+            WHERE t.race_id = %s
+            AND t.user_id = %s
+            AND t.id = (
+                SELECT MAX(id)
+                FROM tipppunkte
+                WHERE race_id = %s
+                AND user_id = t.user_id
+            )
+            ORDER BY u.name;
+        """, (race_id, user_id, race_id))
+
+        # Alle letzten Einträge abrufen
+        tipppunkte = cursor.fetchall()
+
+
+
+    for qresult in qresults:
+        name, driver1, driver2, driver3, driver4 = qresult
+        if name not in ergebnis:
+            ergebnis[name] = {}
+        ergebnis[name].update({f'qdriver{i+1}': qresult[i+1] for i in range(len(qresult)-1)})#, 'qdriver2': driver2, 'qdriver3': driver3, 'qdriver4': driver4})
+
+    for rresult in rresults:
+        name = rresult[0]
+        if name not in ergebnis:
+            ergebnis[name] = {}
+        ergebnis[name].update({f'rdriver{i+1}': rresult[i+1] for i in range(len(rresult)-1)})
+
+    for fresult in fresults:
+        name = fresult[0]
+        if name not in ergebnis:
+            ergebnis[name] = {}
+        ergebnis[name].update({f'fdriver': fresult[1]})
+
+    quali_keys = ['qpunkte1', 'qpunkte2', 'qpunkte3', 'qpunkte4']
+    race_keys = ['rpunkte1', 'rpunkte2', 'rpunkte3', 'rpunkte4', 'rpunkte5', 'rpunkte6', 'rpunkte7', 'rpunkte8',
+                 'rpunkte9', 'rpunkte10']
+
+    if tipppunkte:
+        #name = tipppunkte[-1]  # Name ist die letzte Spalte
+        punkte = tuple(tipppunkte[0][2:-2])  # Punkte sind die Spalten 2 bis vorletzte (qpunkte, rpunkte, fpunkte)
+        ergebnis['punkte'] = {}
+        for i, qkey in enumerate(quali_keys):
+            ergebnis['punkte'][qkey] = punkte[i]
+
+        for i, rkey in enumerate(race_keys):
+            ergebnis['punkte'][rkey] = punkte[i + 4]
+
+        ergebnis['punkte']['fpunkte'] = punkte[-1]
+
+    else:
+        print(f"Keine Daten für race_id {race_id} gefunden.")
+
+
+    return jsonify(ergebnis)
+
+
+
+
+
 
 @rennergebnis_bp.route('/get_punkte', methods=['POST'])
 def get_punkte():
@@ -333,7 +495,7 @@ def calculate_racepunkte(racetipps, wmStand, punkte, city):
                 else:
                     if wmStand is not None and tipp in wmStand:
                         j = wmStand.index(tipp)
-                        punkte[name].update({driver_key[i]: abs(j - i) * 10})
+                        punkte[name].update({driver_key[i]: abs(j - i) * 10 + 10})
                     else:
                         punkte[name].update({driver_key[i]: 0})
                         message = 'Kein WM Stand vorhanden'
