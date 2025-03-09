@@ -20,14 +20,21 @@ export function initHomePage(){
 
     function downloadTabelle() {
 
-        const table = ['qTippTabelle', 'rTippTabelle', 'fTippTabelle'];
-        const sheetNames = ['Qualifying', 'Rennen', 'Schnellste Runde'];
+        const table = ['qTippTabelle', 'rTippTabelle', 'fTippTabelle', 'stabelle'];
+        const sheetNames = ['Qualifying', 'Rennen', 'Schnellste Runde', 'Sprint'];
 
         //Arbeitsmappe für Excel erstellen
         let wb = XLSX.utils.book_new();
 
         table.forEach((tableId, index) => {
             const table = document.getElementById(tableId);
+
+            // Überprüfe, ob die Tabelle im DOM existiert
+            if (!table) {
+                console.log(`Tabelle mit der ID ${tableId} wurde nicht gefunden. Überspringe diese Tabelle.`);
+                return;  // Überspringe die Tabelle, wenn sie nicht existiert
+            }
+
             const rows = table.getElementsByTagName('tr');
             const tableData = [];
 
@@ -62,7 +69,7 @@ export function initHomePage(){
         const qTippTabelle = document.getElementById('qTippTabelle').querySelector('tbody');
         const rTippTabelle = document.getElementById('rTippTabelle').querySelector('tbody');
         const fTippTabelle = document.getElementById('fTippTabelle').querySelector('tbody');
-        const names = ['Alexander','Christine', 'Christoph', 'Jürgen', 'Simon', 'Ergebnis'];
+        const names = ['Alexander','Christine', 'Christoph', 'Jürgen', 'Simon',  'Dummy_LY', 'Dummy_WM', 'Dummy_LR', 'Ergebnis'];
         const qplatzierungen = [1,2,3,4];
         const rplatzierungen = [1,2,3,4,5,6,7,8,9,10];
         qTippTabelle.innerHTML = '';
@@ -149,6 +156,98 @@ export function initHomePage(){
                         td.textContent = '❓';
                     }
                 });
+
+                const tableWrapper = document.querySelector(".table-wrapper");
+
+                // h1 Element erstellen
+                const sh1 = document.createElement('h1');
+                sh1.id = 'sh1'
+                sh1.textContent = 'Sprintrennen';
+                sh1.style.display = 'none';
+
+                if(data.sprint){
+
+                    const h1 = document.getElementById("sh1");
+                    if (h1) {
+                        h1.remove();  // Entfernt das Element aus dem DOM
+                    }
+
+                    const table = document.getElementById("stabelle");
+                    if (table) {
+                        table.remove();  // Entfernt die gesamte Tabelle
+                    }
+
+                    // h1 Element erstellen
+                    const sh1 = document.createElement('h1');
+                    sh1.id = 'sh1'
+                    sh1.textContent = 'Sprintrennen';
+                    //sh1.style.display = 'block';
+
+                    // Tabelle erstellen
+                    const stabelle = document.createElement('table');
+                    stabelle.id = 'stabelle';
+
+                    // Header-Zeile erstellen
+                    const sthead = document.createElement('thead');
+                    const headerRow = document.createElement('tr');
+                    // erste Spalte von Header
+                    headerRow.appendChild(document.createElement('th'));
+
+                    // Header Zeile befüllen
+                    names.forEach((name, colIndex) => {
+                        const th = document.createElement('th');
+                        th.textContent = name;
+                        headerRow.appendChild(th);
+                    });
+
+                    sthead.appendChild(headerRow);
+                    stabelle.appendChild(sthead);
+
+                    const tbody = document.createElement('tbody');
+
+                    for (let platz = 1; platz <= 8; platz++) {
+                        const row = document.createElement('tr');
+
+                        const firstCell = document.createElement('td');
+                        firstCell.textContent = platz;
+                        row.appendChild(firstCell);
+
+                        names.forEach((name, idx) => {
+                            const cell =  document.createElement('td');
+                            //Zugriff auf den jeweiligen Fahrer basierend auf der Platzierung
+                            const sdriverKey = `sdriver${platz}`; // Schlüssel für den jeweiligen Fahrer
+                            if (data[name] && data[name][sdriverKey]) {
+                                const driver = data[name][sdriverKey];
+                                cell.textContent = driver;
+                            } else {
+                                cell.textContent = '❓';
+                            }
+                            row.appendChild(cell);
+
+                        });
+
+                        tbody.append(row);
+                        stabelle.appendChild(tbody);
+
+                    }
+
+                    tableWrapper.appendChild(sh1);
+                    tableWrapper.appendChild(stabelle);
+                    //container.appendChild(tableWrapper);
+
+                } else {
+                    const sh1 = document.getElementById("sh1");
+                    if (sh1) {
+                        sh1.remove();  // Entfernt das Element aus dem DOM
+                    }
+
+                    const table = document.getElementById("stabelle");
+                    if (table) {
+                        table.remove();  // Entfernt die gesamte Tabelle
+                    }
+                }
+
+
             });
     }
 }

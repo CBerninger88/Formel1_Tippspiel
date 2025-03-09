@@ -43,7 +43,7 @@ export function initwmStandPage(){
             .then(data => {
                 wmdriverSelects.forEach((wmDriverSelect, index) => {
                    const wmDriverKey = `wmdriver${index + 1}`;
-                   wmDriverSelect.value = data[wmDriverKey];// || "Fahrer";
+                   wmDriverSelect.value = data[wmDriverKey] || "";
                 });
                 if (!data.success) {
                     alert(data.message);

@@ -1,5 +1,8 @@
 from flask import Blueprint, render_template, request, jsonify
+
+import utils
 from db import get_db
+from spieler import Spieler
 
 home_bp = Blueprint('home', __name__)
 
@@ -9,94 +12,62 @@ def index():
 
 @home_bp.route('/get_tipps')
 def get_tipps():
-    city = request.args.get('city').split(', ')[0]
-    db = get_db()
-    cursor = db.cursor()
-
-    # 2. race_id ermitteln
-    cursor.execute('SELECT id FROM races WHERE city = %s', (city,))
-    race_result = cursor.fetchone()
-    if not race_result:
-        return jsonify({'success': False, 'message': 'Race not found'}), 400
-    race_id = race_result[0]
-
+    city = request.args.get('city').split(', ')[0].capitalize()
+    race_id = utils.get_raceID(city)
+    if not race_id['success']:
+        return race_id
+    else:
+        race_id = race_id['race_id']
     ergebnis = {}
 
-    cursor.execute(f'''
-         WITH LatestEntries AS (
-            SELECT q.user_id, q.driver1, q.driver2, q.driver3, q.driver4,
-                ROW_NUMBER() OVER (PARTITION BY q.user_id ORDER BY q.id DESC) as rn
-            FROM qualitipps q
-            WHERE q.race_id = %s
-        )
-        SELECT u.name, q.driver1, q.driver2, q.driver3, q.driver4
-        FROM LatestEntries q
-        JOIN users u ON u.id = q.user_id
-        WHERE rn = 1;
-        ''', (race_id,))
-
-    qresults = cursor.fetchall()
-
-    cursor.execute(f'''
-             WITH LatestEntries AS (
-                SELECT r.user_id, r.driver1, r.driver2, r.driver3, r.driver4, r.driver5, r.driver6, r.driver7, r.driver8, r.driver9, r.driver10,
-                    ROW_NUMBER() OVER (PARTITION BY r.user_id ORDER BY r.id DESC) as rn
-                FROM racetipps r
-                WHERE r.race_id = %s
-            )
-            SELECT u.name, r.driver1, r.driver2, r.driver3, r.driver4, r.driver5, r.driver6, r.driver7, r.driver8, r.driver9, r.driver10
-            FROM LatestEntries r
-            JOIN users u ON u.id = r.user_id
-            WHERE rn = 1;
-            ''', (race_id,))
-
-    rresults = cursor.fetchall()
-
-    cursor.execute(f'''
-                 WITH LatestEntries AS (
-                    SELECT f.user_id, f.driver1,
-                        ROW_NUMBER() OVER (PARTITION BY f.user_id ORDER BY f.id DESC) as rn
-                    FROM fastestlab f
-                    WHERE f.race_id = %s
-                )
-                SELECT u.name, f.driver1
-                FROM LatestEntries f
-                JOIN users u ON u.id = f.user_id
-                WHERE rn = 1;
-                ''', (race_id,))
-
-    fresults = cursor.fetchall()
-
-    for qresult in qresults:
-        name, driver1, driver2, driver3, driver4 = qresult
+    # Get all Quali Tipps
+    names = utils.get_tipper(race_id, 'qualitipps')
+    for name in names:
+        spieler = Spieler(name)
+        qualitipps = spieler.get_quali_tipps(race_id)
         if name not in ergebnis:
             ergebnis[name] = {}
-        ergebnis[name].update({f'qdriver{i+1}': qresult[i+1] for i in range(len(qresult)-1)})#, 'qdriver2': driver2, 'qdriver3': driver3, 'qdriver4': driver4})
+        ergebnis[name].update(qualitipps)
 
-    for rresult in rresults:
-        name = rresult[0]
+    # Get all Race Tipps
+    names = utils.get_tipper(race_id, 'racetipps')
+    for name in names:
+        spieler = Spieler(name)
+        racetipps = spieler.get_race_tipps(race_id)
         if name not in ergebnis:
             ergebnis[name] = {}
-        ergebnis[name].update({f'rdriver{i+1}': rresult[i+1] for i in range(len(rresult)-1)})
+        ergebnis[name].update(racetipps)
 
-    for fresult in fresults:
-        name = fresult[0]
+    # Get fastest Lab Tipp
+    names = utils.get_tipper(race_id, 'fastestlab')
+    for name in names:
+        spieler = Spieler(name)
+        fastestLabtipp = spieler.get_fastestlab_tipp(race_id)
         if name not in ergebnis:
             ergebnis[name] = {}
-        ergebnis[name].update({f'fdriver': fresult[1]})
+        ergebnis[name].update(fastestLabtipp)
 
+
+    # Get Sprint Tipps if city has Sprintrennen
+    is_sprint = utils.is_sprint(city)
+    if is_sprint:
+
+        names = utils.get_tipper(race_id, 'sprinttipps')
+        for name in names:
+            spieler = Spieler(name)
+            sprinttipps = spieler.get_sprint_tipps(race_id)
+            if name not in ergebnis:
+                ergebnis[name] = {}
+            ergebnis[name].update(sprinttipps)
+
+        ergebnis.update({f'sprint': is_sprint})
+
+    else:
+        ergebnis.update({f'sprint': is_sprint})
 
     return jsonify(ergebnis)
 
 
 @home_bp.route('/get_cities', methods=['GET'])
 def get_cities():
-    db = get_db()
-    cursor = db.cursor()
-    cursor.execute("SELECT city, date FROM races ORDER BY date ASC;")
-    result = cursor.fetchall()
-
-    # Liste der Städte extrahieren
-    cities = [f'{row[0]}, {row[1]}' for row in result]
-
-    return jsonify(cities)
+    return utils.get_cities()

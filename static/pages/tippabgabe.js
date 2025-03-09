@@ -12,8 +12,15 @@ export function initTippabgabePage(){
     const saveButton = document.getElementById('save');
 
     // 1. Dynamische Namen und Städte
-    const tippSpieler = ['Alexander', 'Christine', 'Christoph', 'Jürgen', 'Simon', 'Ergebnis'];
-    populateDropdowns([nameSelect], tippSpieler, 'Name auswählen');
+
+    fetch('/get_users')
+        .then(response => response.json())
+        .then(names => {
+            populateDropdowns([nameSelect], names, 'Name auswählen');
+        })
+        .catch(error => {
+            console.error('Fehler beim Laden der Namen:', error);
+        });
 
     fetch('/races_get_cities')
         .then(response => response.json())
@@ -38,36 +45,57 @@ export function initTippabgabePage(){
         });
 
 
-    //populateDropdowns(qdriverSelects, fahrerListe, 'Fahrer auswählen');
-    //populateDropdowns(driverSelects, fahrerListe, 'Fahrer auswählen');
-    //populateDropdowns([fDriverSelect], fahrerListe, 'Fahrer auswählen');
-
     nameSelect.addEventListener('change', fetchSelection);
     citySelect.addEventListener('change', fetchSelection);
     saveButton.addEventListener('click', saveSelection);
 
-    // Initiales Laden der gespeicherten Auswahl
-    //citySelect.dispatchEvent(new Event('change'));
 
     // Event-Listener für das Ändern der Stadt oder Saison
     function fetchSelection() {
         const selectedName = nameSelect.value;
         const selectedCity = citySelect.value;
 
-        fetch(`/get_selection?name=${selectedName}&city=${selectedCity}`)
+        if (selectedName == 'Dummy_LR' || selectedName == 'Dummy_WM' || selectedName == 'Dummy_LY') {
+            fetch(`/get_dummy?name=${selectedName}&city=${selectedCity}`)
             .then(response => response.json())
             .then(data => {
                 qdriverSelects.forEach((qDriverSelect, index) => {
                    const qDriverKey = `qdriver${index + 1}`;
-                   qDriverSelect.value = data[qDriverKey];// || "Fahrer";
+                   qDriverSelect.value = data[qDriverKey] || "";
                 });
                 driverSelects.forEach((driverSelect, index) => {
-                   const driverKey = `driver${index + 1}`;
-                   driverSelect.value = data[driverKey];// || "Fahrer";
+                   const driverKey = `rdriver${index + 1}`;
+                   driverSelect.value = data[driverKey] || "";
                 });
 
-                fdriverSelect.value = data[`fdriver`];
+                fdriverSelect.value = data[`fdriver`] || "";
             });
+        } else {
+            fetch(`/get_selection?name=${selectedName}&city=${selectedCity}`)
+            .then(response => response.json())
+            .then(data => {
+                qdriverSelects.forEach((qDriverSelect, index) => {
+                   const qDriverKey = `qdriver${index + 1}`;
+                   qDriverSelect.value = data[qDriverKey] || "";
+                   if (data['zeitschranke']) {
+                        qDriverSelect.disabled = true;
+                    }
+                });
+                driverSelects.forEach((driverSelect, index) => {
+                   const driverKey = `rdriver${index + 1}`;
+                   driverSelect.value = data[driverKey] || "";
+                   if (data['zeitschranke']) {
+                        driverSelect.disabled = true;
+                    }
+                });
+
+                fdriverSelect.value = data[`fdriver`] || "";
+                if (data['zeitschranke']) {
+                        fdriverSelect.disabled = true;
+                    }
+            });
+        }
+
     }
 
     // Event-Listener für den Klick auf den Speicher-Button

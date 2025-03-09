@@ -10,8 +10,17 @@ export function initSprinttippsPage(){
     const saveButton = document.getElementById('save');
 
     // 1. Dynamische Namen und Städte
-    const tippSpieler = ['Alexander', 'Christine', 'Christoph', 'Jürgen', 'Simon', 'Ergebnis'];
-    populateDropdowns([nameSelect], tippSpieler, 'Name auswählen');
+    //const tippSpieler = ['Alexander', 'Christine', 'Christoph', 'Jürgen', 'Simon', 'Ergebnis'];
+    //populateDropdowns([nameSelect], tippSpieler, 'Name auswählen');
+
+    fetch('/get_users')
+        .then(response => response.json())
+        .then(names => {
+            populateDropdowns([nameSelect], names, 'Name auswählen');
+        })
+        .catch(error => {
+            console.error('Fehler beim Laden der Namen:', error);
+        });
 
     fetch('/sprint_get_cities')
         .then(response => response.json())
@@ -49,7 +58,7 @@ export function initSprinttippsPage(){
             .then(data => {
                 sdriverSelects.forEach((sDriverSelect, index) => {
                    const sDriverKey = `sdriver${index + 1}`;
-                   sDriverSelect.value = data[sDriverKey];// || "Fahrer";
+                   sDriverSelect.value = data[sDriverKey] || "";
                 });
             });
     }

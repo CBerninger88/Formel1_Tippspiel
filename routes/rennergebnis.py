@@ -2,6 +2,7 @@ from pickle import NEXT_BUFFER
 
 from flask import Blueprint, render_template, request, jsonify
 from db import get_db
+import utils
 
 # Erstellen des Blueprints
 rennergebnis_bp = Blueprint('rennergebnis', __name__)
@@ -14,27 +15,12 @@ def rennergebnis():
 
 @rennergebnis_bp.route('/get_cities', methods=['GET'])
 def get_cities():
-    db = get_db()
-    cursor = db.cursor()
-    cursor.execute("SELECT city, date FROM races ORDER BY date ASC;")
-    result = cursor.fetchall()
+    return utils.get_cities()
 
-    # Liste der Städte extrahieren
-    cities = [f'{row[0]}, {row[1]}' for row in result]
-
-    return jsonify(cities)
 
 @rennergebnis_bp.route('/get_users_rennergebnis', methods=['GET'])
 def get_users():
-    db = get_db()
-    cursor = db.cursor()
-    cursor.execute("SELECT name FROM users ORDER BY id ASC;")
-    result = cursor.fetchall()
-
-    # Liste der Städte extrahieren
-    users = [row[0] for row in result]
-
-    return jsonify(users)
+    return jsonify(utils.get_users())
 
 
 @rennergebnis_bp.route('/get_einzeltipps')

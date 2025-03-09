@@ -1,5 +1,8 @@
 from flask import Blueprint, render_template, request, jsonify
+
+import utils
 from db import get_db
+from spieler import Spieler
 
 # Erstellen des Blueprints
 sprinttipps_bp = Blueprint('sprinttipps', __name__)
@@ -12,45 +15,20 @@ def sprinttipps():
 @sprinttipps_bp.route('/get_sprinttipps')
 def get_sprinttipps():
     name = request.args.get('name')
-    city = request.args.get('city').split(', ')[0]
+    city = request.args.get('city').split(', ')[0].capitalize()
 
-    db = get_db()
-    cursor = db.cursor()
+    if name not in utils.get_users():
+        return {}
 
-    # 1. user_id anhand des Namens finden
-    cursor.execute('SELECT id FROM users WHERE name = %s', (name,))
-    user_result = cursor.fetchone()
-    if not user_result:
-        drivers = {f'sdriver{i + 1}': "" for i in range(8)}
-        return jsonify(drivers)
-        #return jsonify({'success': False, 'message': 'User not found'}), 400
-    user_id = user_result[0]
-
-    # 2. race_id anhand der Stadt finden
-    cursor.execute('SELECT id FROM races WHERE city = %s', (city,))
-    race_result = cursor.fetchone()
-    if not race_result:
-        drivers = {f'sdriver{i + 1}': "" for i in range(8)}
-        return jsonify(drivers)
-        #return jsonify({'success': False, 'message': 'Race not found'}), 400
-    race_id = race_result[0]
-
-    # 3. Qualifying-Tipps aus der QualiTips-Tabelle auslesen
-    cursor.execute("""
-           SELECT driver1, driver2, driver3, driver4, driver5, driver6, driver7, driver8
-           FROM sprinttipps
-           WHERE user_id = %s AND race_id = %s
-           ORDER BY id DESC LIMIT 1
-       """, (user_id, race_id))
-    result = cursor.fetchone()
-
-
-    if result:
-        # Dynamisch Fahrer in ein Dictionary packen
-        drivers = {f'sdriver{i+1}': result[i] for i in range(len(result))}
+    race_id = utils.get_raceID(city)
+    if not race_id['success']:
+        return {}
     else:
-        # Dynamisch leere Fahrer zurückgeben
-        drivers = {f'sdriver{i + 1}': "" for i in range(8)}
+        race_id = race_id['race_id']
+
+    spieler = Spieler(name)
+    drivers = {}
+    drivers.update(spieler.get_sprint_tipps(race_id))
 
     return jsonify(drivers)
 
@@ -58,59 +36,31 @@ def get_sprinttipps():
 def save_sprinttipps():
     data = request.get_json()
     name = data['name']
-    city = data['city'].split(', ')[0]
+    city = data['city'].split(', ')[0].capitalize()
 
     # Race Fahrer 1-3 auslesen (Standardwert ist ein leerer String, falls nicht übergeben)
-    drivers = [data.get(f'sdriver{i + 1}', '') for i in range(8)]
+    sdrivers = [data.get(f'sdriver{i + 1}', '') for i in range(8)]
 
-    db = get_db()
-    cursor = db.cursor()
+    race_id = utils.get_raceID(city)
+    if not race_id['success']:
+        return race_id
+    else:
+        race_id = race_id['race_id']
 
-    # 1. user_id ermitteln
-    cursor.execute('SELECT id FROM users WHERE name = %s', (name,))
-    user_result = cursor.fetchone()
-    if not user_result:
-        return jsonify({'success': False, 'message': 'User not found'}), 400
-    user_id = user_result[0]
-
-    # 2. race_id ermitteln
-    cursor.execute('SELECT id FROM races WHERE city = %s', (city,))
-    race_result = cursor.fetchone()
-    if not race_result:
-        return jsonify({'success': False, 'message': 'Race not found'}), 400
-    race_id = race_result[0]
-
-    # 3. Daten in QualiTips speichern
-    cursor.execute('''
-            INSERT INTO sprinttipps (user_id, race_id, driver1, driver2, driver3, driver4, driver5, driver6, driver7, driver8)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-    ''', (user_id, race_id, *drivers))
-
-    db.commit()
+    spieler = Spieler(name)
+    spieler.set_sprint_tipps(race_id, sdrivers)
 
     return jsonify({'success': True})
 
 
 @sprinttipps_bp.route('/sprint_get_cities', methods=['GET'])
 def get_cities():
-    db = get_db()
-    cursor = db.cursor()
-    cursor.execute("SELECT city, date FROM races WHERE is_sprint ORDER BY date ASC;")
-    result = cursor.fetchall()
-
-    # Liste der Städte extrahieren
-    cities = [f'{row[0]}, {row[1]}' for row in result]
-
-    return jsonify(cities)
+    return utils.get_sprintCities()
 
 @sprinttipps_bp.route('/get_drivers', methods=['GET'])
 def get_drivers():
-    db = get_db()
-    cursor = db.cursor()
-    cursor.execute("SELECT name FROM drivers ORDER BY name ASC;")
-    result = cursor.fetchall()
+    return jsonify(utils.get_drivers())
 
-    # Liste der Städte extrahieren
-    drivers = [row[0] for row in result]
-
-    return jsonify(drivers)
+@sprinttipps_bp.route('/get_users', methods=['GET'])
+def get_users():
+    return utils.get_users()
