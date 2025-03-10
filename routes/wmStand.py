@@ -22,46 +22,6 @@ def get_drivers():
     return jsonify(utils.get_drivers())
 
 
-@wmStand_bp.route('/get_wm_stand_api', methods=['GET'])
-def get_wm_stand_api():
-    city = request.args.get('city').split(', ')[0].capitalize()
-
-    if city == 'Melbourne':
-        return jsonify({'success': False, 'message': 'Kein WM Stand bei erstem Rennen'}), 400
-
-    db = get_db()
-    cursor = db.cursor()
-
-    cursor.execute('SELECT id FROM races WHERE city = %s', (city,))
-    race_result = cursor.fetchone()
-    if not race_result:
-        return jsonify({'success': False, 'message': 'Race not found'}), 400
-    race_id = race_result[0]
-
-    season = 2024
-    round_number = race_id-1
-
-    url = f"https://ergast.com/api/f1/{season}/{round_number}/driverStandings.json"
-    response = requests.get(url)
-
-    if response.status_code == 200:
-        data = response.json()
-        drivers = {}
-        i = 0
-        for driver_info in data['MRData']['StandingsTable']['StandingsLists'][0]['DriverStandings']:
-            driver_name = f"{driver_info['Driver']['givenName'][0]}. {driver_info['Driver']['familyName']}"
-            #points = driver_info['points']
-            #team = driver_info['Constructors'][0]['name']
-            drivers.update({f'wmdriver{i+1}': driver_name})
-            i = i+1
-
-        drivers.update({'success': True})
-        return jsonify(drivers)
-    else:
-        return jsonify({'success': False, 'message': 'Keine Daten von API erhalten'}), 500
-
-
-
 @wmStand_bp.route('/get_wm_stand')
 def get_wm_stand():
 

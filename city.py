@@ -46,7 +46,7 @@ class City:
             if self.city == 'Melbourne':
                 return {}, {'success': False, 'message': 'Kein WM Stand beim ersten Rennen'}
 
-            season = 2024
+            season = 2025
             round_number = self.race_id - 1
 
             url = f"https://ergast.com/api/f1/{season}/{round_number}/driverStandings.json"
@@ -55,15 +55,19 @@ class City:
             if response.status_code == 200:
                 data = response.json()
                 i = 0
-                for driver_info in data['MRData']['StandingsTable']['StandingsLists'][0]['DriverStandings']:
-                    driver_name = f"{driver_info['Driver']['givenName'][0]}. {driver_info['Driver']['familyName']}"
-                    # points = driver_info['points']
-                    # team = driver_info['Constructors'][0]['name']
-                    ergebnis.update({f'wmdriver{i + 1}': driver_name})
-                    i = i + 1
 
-                self.set_wm_stand(list(ergebnis.values()))
-                #ergebnis.update({'success': True})
+                try:
+                    for driver_info in data['MRData']['StandingsTable']['StandingsLists'][0]['DriverStandings']:
+                        driver_name = f"{driver_info['Driver']['givenName'][0]}. {driver_info['Driver']['familyName']}"
+                        # points = driver_info['points']
+                        # team = driver_info['Constructors'][0]['name']
+                        ergebnis.update({f'wmdriver{i + 1}': driver_name})
+                        i = i + 1
+
+                    self.set_wm_stand(list(ergebnis.values()))
+
+                except (KeyError, IndexError, TypeError):
+                    return {}, {'success': False, 'message': 'Noch kein WM Stand für das Rennen bekannt'}
 
             else:
                 return {}, {'success': False, 'message': 'Keine Daten von API erhalten'}

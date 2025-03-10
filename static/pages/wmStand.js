@@ -5,10 +5,8 @@ export function initwmStandPage(){
 
     const citySelect = document.getElementById('city');
     const wmdriverSelects = Array.from(document.querySelectorAll('[id^="wmdriver"]'));
-    const getWMStandBtn = document.getElementById('getWMStand');
     const saveWMStandBtn = document.getElementById('wmStand');
 
-    getWMStandBtn.addEventListener('click', fetchSelection);
     saveWMStandBtn.addEventListener('click', saveSelection);
     citySelect.addEventListener('change', fetchWMStand);
 
@@ -35,10 +33,11 @@ export function initwmStandPage(){
             console.error('Fehler beim Laden der Städte:', error);
         });
 
-    function fetchSelection() {
+
+    function fetchWMStand() {
         const selectedCity = citySelect.value;
 
-        fetch(`/get_wm_stand_api?city=${selectedCity}`)
+        fetch(`/get_wm_stand?city=${selectedCity}`)
             .then(response => response.json())
             .then(data => {
                 wmdriverSelects.forEach((wmDriverSelect, index) => {
@@ -48,20 +47,6 @@ export function initwmStandPage(){
                 if (!data.success) {
                     alert(data.message);
                 }
-            });
-    }
-
-
-        function fetchWMStand() {
-        const selectedCity = citySelect.value;
-
-        fetch(`/get_wm_stand?city=${selectedCity}`)
-            .then(response => response.json())
-            .then(data => {
-                wmdriverSelects.forEach((wmDriverSelect, index) => {
-                   const wmDriverKey = `wmdriver${index + 1}`;
-                   wmDriverSelect.value = data[wmDriverKey];// || "Fahrer";
-                });
             });
     }
 
