@@ -38,7 +38,7 @@ def get_selection():
 
     heute = date.today()
     renndatum = datetime.strptime(request.args.get('city').split(', ')[1], "%Y-%m-%d").date()
-    if (renndatum - heute).days < 3:
+    if (renndatum - heute).days < 3 and name not in ['Ergebnis', 'Dummy_LY', 'Dummy_WM', 'Dummy_LR']:
         drivers.update({'zeitschranke': True})
     else:
         drivers.update({'zeitschranke': False})

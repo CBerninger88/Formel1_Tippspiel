@@ -75,6 +75,7 @@ export function initTippabgabePage(){
             .then(response => response.json())
             .then(data => {
                 qdriverSelects.forEach((qDriverSelect, index) => {
+                   qDriverSelect.disabled = false;
                    const qDriverKey = `qdriver${index + 1}`;
                    qDriverSelect.value = data[qDriverKey] || "";
                    if (data['zeitschranke']) {
@@ -82,6 +83,7 @@ export function initTippabgabePage(){
                     }
                 });
                 driverSelects.forEach((driverSelect, index) => {
+                   driverSelect.disabled = false;
                    const driverKey = `rdriver${index + 1}`;
                    driverSelect.value = data[driverKey] || "";
                    if (data['zeitschranke']) {
@@ -90,6 +92,7 @@ export function initTippabgabePage(){
                 });
 
                 fdriverSelect.value = data[`fdriver`] || "";
+                fdriverSelect.disabled = false;
                 if (data['zeitschranke']) {
                         fdriverSelect.disabled = true;
                     }

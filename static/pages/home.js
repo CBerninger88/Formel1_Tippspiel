@@ -19,7 +19,7 @@ export function initHomePage(){
     citySelect.dispatchEvent(new Event('change'));
 
     function downloadTabelle() {
-        const city = citySelect.value?.split(', ')[0]
+        const city = citySelect.value ? citySelect.value.split(', ')[0] : 'Unbekannt';
         const table = ['qTippTabelle', 'rTippTabelle', 'fTippTabelle', 'stabelle'];
         const sheetNames = [`Qualifying (${city})`, `Rennen (${city})`, `Schnellste Runde (${city})`, `Sprint (${city})`];
 
@@ -62,7 +62,8 @@ export function initHomePage(){
         });
 
         // Excel-Datei generieren und herunterladen
-        XLSX.writeFile(wb, `F1_Tippspiel_${city}.xlsx`);
+        const safeCity = city.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '_');
+        XLSX.writeFile(wb, `F1_Tippspiel_${safeCity}.xlsx`);
     }
 
     function constructTabelle() {
@@ -95,7 +96,9 @@ export function initHomePage(){
 
         fetch(`/get_tipps?city=${selectedCity}`)
             .then(response => {
-                if(!response.ok) throw new Error(`Fehlerhafte Antwort: ${response.status}`);
+                if(!response.ok) {
+                    throw new Error(`Fehlerhafte Antwort: ${response.status}`);
+                }
                 return response.json();
             })
             .then(data => {
