@@ -135,7 +135,7 @@ class Dummy(Spieler):
 
                 if fdrivers != {}:
                     ergebnis.update(fdrivers)
-                    self.set_race_tipps(race_id, list(fdrivers.values()))
+                    self.set_fastestLab_tipps(race_id, list(fdrivers.values()))
 
             elif self.name == "Dummy_LY":
                 cityName = utils.get_cityName(race_id)
