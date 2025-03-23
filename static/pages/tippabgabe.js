@@ -60,14 +60,16 @@ export function initTippabgabePage(){
             .then(response => response.json())
             .then(data => {
                 qdriverSelects.forEach((qDriverSelect, index) => {
+                   qDriverSelect.disabled = false;
                    const qDriverKey = `qdriver${index + 1}`;
                    qDriverSelect.value = data[qDriverKey] || "";
                 });
                 driverSelects.forEach((driverSelect, index) => {
+                   driverSelect.disabled = false;
                    const driverKey = `rdriver${index + 1}`;
                    driverSelect.value = data[driverKey] || "";
                 });
-
+                fdriverSelect.disabled = false;
                 fdriverSelect.value = data[`fdriver`] || "";
             });
         } else {

@@ -59,9 +59,8 @@ def get_dummy():
     dummy = Dummy(name)
     drivers = {}
     drivers.update(dummy.get_quali_tipps(race_id))
-    spieler = Spieler(name)
     drivers.update(dummy.get_race_tipps(race_id))
-    drivers.update(spieler.get_fastestlab_tipp(race_id))
+    drivers.update(dummy.get_fastestlab_tipp(race_id))
 
     return jsonify(drivers)
 

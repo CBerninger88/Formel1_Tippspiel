@@ -37,7 +37,7 @@ class Dummy(Spieler):
             elif self.name == "Dummy_LY":
                 cityName = utils.get_cityName(race_id)
                 city = City(cityName['cityName'])
-                lyStand, success = city.get_lastyear_result()
+                lyStand, success = city.get_lastyear_quali()
                 lyStand_list = list(lyStand.values())
                 drivers = list(utils.get_drivers())
                 lyStand_list = [element for element in lyStand_list if element in drivers]
@@ -107,5 +107,46 @@ class Dummy(Spieler):
                 if success['success']:
                     ergebnis.update({f'rdriver{i + 1}': wmStand_list[i] for i in range(10)})
                     self.set_race_tipps(race_id, wmStand_list[0:10])
+
+        return ergebnis
+
+    def get_fastestlab_tipp(self, race_id):
+        ergebnis = {}
+        db = get_db()
+        cursor = db.cursor()
+
+        cursor.execute("""
+                    SELECT driver1
+                    FROM fastestlab
+                    WHERE user_id = %s AND race_id = %s
+                    ORDER BY id DESC LIMIT 1
+                    """, (self.user_id, race_id))
+        fresult = cursor.fetchone()
+
+        if fresult is not None:
+            ergebnis.update({f'fdriver': fresult[0]})
+
+        else:
+            if self.name == "Dummy_LR" or self.name == "Dummy_WM":
+                lastRace = Spieler('Ergebnis')
+                fdrivers = {}
+                if race_id > 1:
+                    fdrivers = lastRace.get_fastestlab_tipp(race_id - 1)
+
+                if fdrivers != {}:
+                    ergebnis.update(fdrivers)
+                    self.set_race_tipps(race_id, list(fdrivers.values()))
+
+            elif self.name == "Dummy_LY":
+                cityName = utils.get_cityName(race_id)
+                city = City(cityName['cityName'])
+                fdriver, success = city.get_lastyear_fastestLab()
+                fdriver_list = list(fdriver.values())
+                drivers = list(utils.get_drivers())
+                fdriver_list = [element for element in fdriver_list if element in drivers]
+
+                if success['success']:
+                    ergebnis.update({f'fdriver': fdriver_list[0]})
+                    self.set_fastestLab_tipps(race_id, fdriver_list[0])
 
         return ergebnis

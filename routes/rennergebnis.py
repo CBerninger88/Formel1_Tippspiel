@@ -25,7 +25,7 @@ def get_users():
 
 @rennergebnis_bp.route('/get_einzeltipps')
 def get_einzeltipps():
-    city = request.args.get('city').split(', ')[0]
+    city = request.args.get('city').split(', ')[0].capitalize()
     name = request.args.get('name')
     db = get_db()
     cursor = db.cursor()
@@ -176,7 +176,7 @@ def get_einzeltipps():
 @rennergebnis_bp.route('/get_punkte', methods=['POST'])
 def get_punkte():
     data = request.get_json()
-    city = data.get('city').split(', ')[0]
+    city = data.get('city').split(', ')[0].capitalize()
     calcNew = data.get('calcNew')
 
     db = get_db()

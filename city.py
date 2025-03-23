@@ -1,5 +1,6 @@
 import requests
 
+import utils
 from db import get_db
 
 
@@ -47,7 +48,12 @@ class City:
                 return {}, {'success': False, 'message': 'Kein WM Stand beim ersten Rennen'}
 
             season = 2025
-            round_number = self.race_id - 1
+            cityName = utils.get_cityName(self.race_id-1)
+            round_number = self.get_round_number(cityName['cityName'], 2025)
+
+            if round_number is None:
+                print(f"⚠️ Kein Rennen für {self.city} in {season} gefunden.")
+                return {}, {'success': False}
 
             url = f"https://ergast.com/api/f1/{season}/{round_number}/driverStandings.json"
             response = requests.get(url)
@@ -93,10 +99,13 @@ class City:
     def get_lastyear_result(self):
         ergebnis = {}
         season = 2024
-        round_number = self.race_id
+        round_number = self.get_round_number(self.city, 2024)
 
-        url = f"https://ergast.com/api/f1/{season}/{round_number}/driverStandings.json"
+        if round_number is None:
+            print(f"⚠️ Kein Rennen für {self.city} in {season} gefunden.")
+            return {}, {'success': False}
 
+        url = f"https://ergast.com/api/f1/{season}/{round_number}/results.json"
         response = requests.get(url)
 
         # Überprüfen, ob die Anfrage erfolgreich war
@@ -104,16 +113,135 @@ class City:
             data = response.json()  # JSON-Daten extrahieren
 
             # Rennergebnisse aus den Daten extrahieren
-            driver_standings = data['MRData']['StandingsTable']['StandingsLists'][0]['DriverStandings']
+            race_results = data["MRData"]["RaceTable"]["Races"][0]["Results"]
             i = 0
 
             # Ergebnisse anzeigen
-            for driver_info in driver_standings:
-                #position = result['position']
-                driver_name = f"{driver_info['Driver']['givenName'][0]}. {driver_info['Driver']['familyName']}"
-                #constructor = result['Constructor']['name']
-                ergebnis.update({f'lydriver{i + 1}': driver_name})
-                i = i + 1
-
+            for pos, result in enumerate(race_results, start=1):
+                driver_name = f"{result['Driver']['givenName'][0]}. {result['Driver']['familyName']}"
+                ergebnis[f'lydriver{pos}'] = driver_name
 
         return ergebnis, {'success': True}
+
+
+    def get_lastyear_quali(self):
+        ergebnis = {}
+        season = 2024
+        round_number = self.get_round_number(self.city, 2024)
+
+        if round_number is None:
+            print(f"⚠️ Kein Rennen für {self.city} in {season} gefunden.")
+            return {}, {'success': False}
+
+        url = f"https://ergast.com/api/f1/{season}/{round_number}/results.json"
+        response = requests.get(url)
+
+        if response.status_code == 200:
+            data = response.json()  # JSON-Daten extrahieren
+
+            try:
+                # Rennergebnisse aus den Daten extrahieren
+                race_results = data["MRData"]["RaceTable"]["Races"][0]["Results"]
+
+                # Ergebnisse anzeigen
+                for result in race_results:
+                    grid_position = int(result["grid"])  # Startplatz als Zahl
+                    if grid_position > 0:  # Fahrer, die aus der Box starten, haben grid = "0"
+                        driver_name = f"{result['Driver']['givenName'][0]}. {result['Driver']['familyName']}"
+                        ergebnis[f'lyqdriver{grid_position}'] = driver_name  # Fahrer nach Startposition speichern
+
+                ergebnis = dict(sorted(ergebnis.items(), key=lambda x: int(x[0].split('driver')[-1])))
+
+            except (KeyError, IndexError):
+                return "Datenstruktur nicht wie erwartet"
+
+        return ergebnis, {'success': True}
+
+
+    def get_lastyear_fastestLab(self):
+        season = 2024
+        round_number = self.get_round_number(self.city, 2024)
+
+        if round_number is None:
+            print(f"⚠️ Kein Rennen für {self.city} in {season} gefunden.")
+            return {}, {'success': False}
+
+        url = f"https://ergast.com/api/f1/{season}/{round_number}/results.json"
+        response = requests.get(url)
+
+        if response.status_code != 200:
+            return f"Fehler: {response.status_code}"
+
+        data = response.json()
+
+        try:
+            # Ergebnisse des Rennens abrufen
+            race_results = data["MRData"]["RaceTable"]["Races"][0]["Results"]
+
+            fastest_driver = None
+            fastest_time = float('inf')
+
+            fastest_lap_info = None
+            for result in race_results:
+                if "FastestLap" in result:
+                    fastest_lap_info = result["FastestLap"]
+
+                if fastest_lap_info:
+                    lap_time_str = result["FastestLap"]["Time"]["time"]
+                    lap_time = self.convert_time_to_seconds(lap_time_str)
+                    driver_name = f"{result['Driver']['givenName'][0]}. {result['Driver']['familyName']}"
+
+                    # Vergleiche die Zeiten, um den schnellsten Fahrer zu finden
+                    if fastest_time is None or lap_time < fastest_time:
+                        fastest_time = lap_time
+                        fastest_driver = driver_name
+
+                    fastest_lap_info = None
+
+            if fastest_driver:
+                ergebnis = {f'lyfdriver': fastest_driver}
+                return ergebnis , {'success': True}
+            else:
+                return {}, {'success': False, 'message': 'Keine schnellste Runde gefunden'}
+
+        except (KeyError, IndexError):
+            return {}, {'success': False, 'message': 'Keine schnellste Runde gefunden'}
+
+
+
+    def convert_time_to_seconds(self, time_str):
+        """Konvertiert eine Zeit im Format 'M:SS.sss' oder 'SS.sss' in Sekunden als float."""
+        test = 5
+        try:
+            if ":" in time_str:
+                minutes, rest = time_str.split(":")
+                seconds = float(rest)
+                return int(minutes) * 60 + seconds  # Minuten in Sekunden umwandeln
+            else:
+                return float(time_str)  # Falls nur Sekunden vorhanden sind
+        except ValueError:
+            return float('inf')  # Falls ein Fehler auftritt, setzen wir eine unendlich große Zahl
+
+
+    def get_round_number(self, city, season=2024):
+        """Findet die Rundennummer (round_number) eines Rennens in einer bestimmten Stadt."""
+
+        url = f"https://ergast.com/api/f1/{season}.json"
+        response = requests.get(url)
+
+        if response.status_code == 200:
+            data = response.json()
+
+            try:
+                races = data["MRData"]["RaceTable"]["Races"]
+
+                for race in races:
+                    if city.lower() in race["Circuit"]["Location"]["locality"].lower():
+                        return int(race["round"])  # Rundennummer zurückgeben
+
+                return None  # Falls die Stadt nicht gefunden wurde
+
+            except (KeyError, IndexError):
+                return None  # Falls die API-Struktur unerwartet ist
+
+        return None  # Falls die API nicht erreichbar ist
