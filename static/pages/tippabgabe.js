@@ -59,18 +59,26 @@ export function initTippabgabePage(){
             fetch(`/get_dummy?name=${selectedName}&city=${selectedCity}`)
             .then(response => response.json())
             .then(data => {
+
+                const drivers = data.drivers;
+                const status = data.status;
+
                 qdriverSelects.forEach((qDriverSelect, index) => {
                    qDriverSelect.disabled = false;
                    const qDriverKey = `qdriver${index + 1}`;
-                   qDriverSelect.value = data[qDriverKey] || "";
+                   qDriverSelect.value = drivers[qDriverKey] || "";
                 });
                 driverSelects.forEach((driverSelect, index) => {
                    driverSelect.disabled = false;
                    const driverKey = `rdriver${index + 1}`;
-                   driverSelect.value = data[driverKey] || "";
+                   driverSelect.value = drivers[driverKey] || "";
                 });
                 fdriverSelect.disabled = false;
-                fdriverSelect.value = data[`fdriver`] || "";
+                fdriverSelect.value = drivers[`fdriver`] || "";
+
+                if (!status.success) {
+                    alert(status.message);
+                }
             });
         } else {
             fetch(`/get_selection?name=${selectedName}&city=${selectedCity}`)

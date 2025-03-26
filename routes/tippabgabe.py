@@ -50,19 +50,27 @@ def get_dummy():
     name = request.args.get('name')
     city = request.args.get('city').split(', ')[0].capitalize()
 
-    race_id = utils.get_raceID(city)
-    if not race_id['success']:
-        return {}
-    else:
-        race_id = race_id['race_id']
+    race_data = utils.get_raceID(city)
+    if not race_data.get('success'):
+        return jsonify({'drivers': {}, 'status': {'success': False, 'message': 'Race ID nicht gefunden'}})
 
+    race_id = race_data['race_id']
     dummy = Dummy(name)
-    drivers = {}
-    drivers.update(dummy.get_quali_tipps(race_id))
-    drivers.update(dummy.get_race_tipps(race_id))
-    drivers.update(dummy.get_fastestlab_tipp(race_id))
 
-    return jsonify(drivers)
+    # Fahrer-Tipps abrufen
+    qualitipps, qstatus = dummy.get_quali_tipps(race_id)
+    racetipps, rstatus = dummy.get_race_tipps(race_id)
+    fastestlabtipps, fstatus = dummy.get_fastestlab_tipp(race_id)
+
+    # Daten zusammenführen
+    drivers = {**qualitipps, **racetipps, **fastestlabtipps}
+
+    # Status berechnen
+    success = all([qstatus.get('success'), rstatus.get('success'), fstatus.get('success')])
+    message = f"Quali: {qstatus.get('message', 'Kein Status')}, Race: {rstatus.get('message', 'Kein Status')}, Fastest Lap: {fstatus.get('message', 'Kein Status')}"
+
+    return jsonify({'drivers': drivers, 'status': {'success': success, 'message': message}})
+
 
 @tippabgabe_bp.route('/save_selection', methods=['POST'])
 def save_selection():

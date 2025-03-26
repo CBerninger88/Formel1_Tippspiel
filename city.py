@@ -1,7 +1,12 @@
 import requests
-
+import pandas as pd
+from bs4 import BeautifulSoup
 import utils
 from db import get_db
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from bs4 import BeautifulSoup
+import time
 
 
 class City:
@@ -24,7 +29,6 @@ class City:
 
     def get_wm_stand(self):
 
-        ergebnis = {}
         db = get_db()
         cursor = db.cursor()
 
@@ -47,38 +51,9 @@ class City:
             if self.city == 'Melbourne':
                 return {}, {'success': False, 'message': 'Kein WM Stand beim ersten Rennen'}
 
-            season = 2025
-            cityName = utils.get_cityName(self.race_id-1)
-            round_number = self.get_round_number(cityName['cityName'], 2025)
+            return {}, {'success': False, 'message': 'WM Stand wurde noch nicht eingegeben'}
 
-            if round_number is None:
-                print(f"⚠️ Kein Rennen für {self.city} in {season} gefunden.")
-                return {}, {'success': False}
-
-            url = f"https://ergast.com/api/f1/{season}/{round_number}/driverStandings.json"
-            response = requests.get(url)
-
-            if response.status_code == 200:
-                data = response.json()
-                i = 0
-
-                try:
-                    for driver_info in data['MRData']['StandingsTable']['StandingsLists'][0]['DriverStandings']:
-                        driver_name = f"{driver_info['Driver']['givenName'][0]}. {driver_info['Driver']['familyName']}"
-                        # points = driver_info['points']
-                        # team = driver_info['Constructors'][0]['name']
-                        ergebnis.update({f'wmdriver{i + 1}': driver_name})
-                        i = i + 1
-
-                    self.set_wm_stand(list(ergebnis.values()))
-
-                except (KeyError, IndexError, TypeError):
-                    return {}, {'success': False, 'message': 'Noch kein WM Stand für das Rennen bekannt'}
-
-            else:
-                return {}, {'success': False, 'message': 'Keine Daten von API erhalten'}
-
-        return ergebnis, {'success': True}
+        return ergebnis, {'success': True, 'message': 'Ok'}
 
     def set_wm_stand(self, wmdrivers):
 
@@ -103,7 +78,7 @@ class City:
 
         if round_number is None:
             print(f"⚠️ Kein Rennen für {self.city} in {season} gefunden.")
-            return {}, {'success': False}
+            return {}, {'success': False, 'message': f"Kein Rennen für {self.city} in {season} gefunden."}
 
         url = f"https://ergast.com/api/f1/{season}/{round_number}/results.json"
         response = requests.get(url)
@@ -121,7 +96,7 @@ class City:
                 driver_name = f"{result['Driver']['givenName'][0]}. {result['Driver']['familyName']}"
                 ergebnis[f'lydriver{pos}'] = driver_name
 
-        return ergebnis, {'success': True}
+        return ergebnis, {'success': True, 'message': 'Ok'}
 
 
     def get_lastyear_quali(self):
@@ -131,7 +106,7 @@ class City:
 
         if round_number is None:
             print(f"⚠️ Kein Rennen für {self.city} in {season} gefunden.")
-            return {}, {'success': False}
+            return {}, {'success': False, 'message': f'Kein Rennen für {self.city} in {season} gefunden.'}
 
         url = f"https://ergast.com/api/f1/{season}/{round_number}/results.json"
         response = requests.get(url)
@@ -153,9 +128,9 @@ class City:
                 ergebnis = dict(sorted(ergebnis.items(), key=lambda x: int(x[0].split('driver')[-1])))
 
             except (KeyError, IndexError):
-                return "Datenstruktur nicht wie erwartet"
+                return {}, {'success': False, 'message': 'Datenstruktur nicht wie erwartet'}
 
-        return ergebnis, {'success': True}
+        return ergebnis, {'success': True, 'message': 'Ok'}
 
 
     def get_lastyear_fastestLab(self):
@@ -164,13 +139,13 @@ class City:
 
         if round_number is None:
             print(f"⚠️ Kein Rennen für {self.city} in {season} gefunden.")
-            return {}, {'success': False}
+            return {}, {'success': False, 'message': f"Kein Rennen für {self.city} in {season} gefunden."}
 
         url = f"https://ergast.com/api/f1/{season}/{round_number}/results.json"
         response = requests.get(url)
 
         if response.status_code != 200:
-            return f"Fehler: {response.status_code}"
+            return {}, {'success': False, 'message': f"Kein Renndaten für {self.city} in {season} von API erhalten."}
 
         data = response.json()
 
@@ -200,12 +175,12 @@ class City:
 
             if fastest_driver:
                 ergebnis = {f'lyfdriver': fastest_driver}
-                return ergebnis , {'success': True}
+                return ergebnis , {'success': True, 'message': 'Ok'}
             else:
-                return {}, {'success': False, 'message': 'Keine schnellste Runde gefunden'}
+                return {}, {'success': False, 'message': 'Keine schnellste Runde in API gefunden'}
 
         except (KeyError, IndexError):
-            return {}, {'success': False, 'message': 'Keine schnellste Runde gefunden'}
+            return {}, {'success': False, 'message': 'Keine schnellste Runde in API gefunden'}
 
 
 
@@ -245,3 +220,13 @@ class City:
                 return None  # Falls die API-Struktur unerwartet ist
 
         return None  # Falls die API nicht erreichbar ist
+
+    def get_session_key(self, year, circuit_name):
+        url = f"https://api.openf1.org/v1/sessions?year={year}"
+        response = requests.get(url)
+        if response.status_code == 200:
+            sessions = response.json()
+            for session in sessions:
+                if circuit_name.lower() in session['location'].lower():
+                    return session['session_key']
+        return None
