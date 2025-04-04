@@ -1,9 +1,6 @@
-from pickle import NEXT_BUFFER
-
 from flask import Blueprint, render_template, request, jsonify
 
 from city import City
-from db import get_db
 import utils
 from spieler import Spieler
 

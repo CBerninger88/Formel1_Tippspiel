@@ -1,9 +1,7 @@
 from flask import Blueprint, render_template, request, jsonify
-import requests
 
 import utils
 from city import City
-from db import get_db
 
 # Erstellen des Blueprints
 wmStand_bp = Blueprint('wmStand', __name__)

@@ -2,7 +2,6 @@ from flask import Blueprint, render_template, request, jsonify
 
 
 import utils
-from db import get_db
 from dummy import Dummy
 from spieler import Spieler
 from datetime import date

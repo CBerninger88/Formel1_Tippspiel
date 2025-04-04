@@ -1,7 +1,6 @@
 from flask import Blueprint, render_template, request, jsonify
 
 import utils
-from db import get_db
 from spieler import Spieler
 
 # Erstellen des Blueprints
