@@ -187,7 +187,8 @@ class Spieler:
                      'rpunkte9', 'rpunkte10']
 
         if punkte == {}:
-            msg = f'Keine Punkte für {', '.join(self.name)}'
+            namen_liste = ', '.join(self.name)
+            msg = f'Keine Punkte für {namen_liste}'
             return {}, {'success': False, 'message': msg}
 
 
