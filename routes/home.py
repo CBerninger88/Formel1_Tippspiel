@@ -24,7 +24,7 @@ def get_tipps():
     names = utils.get_tipper(race_id, 'qualitipps')
     for name in names:
         spieler = Spieler(name)
-        qualitipps = spieler.get_quali_tipps(race_id)
+        qualitipps = spieler.get_quali_tipps(race_id)[0]
         if name not in ergebnis:
             ergebnis[name] = {}
         ergebnis[name].update(qualitipps)
@@ -33,7 +33,7 @@ def get_tipps():
     names = utils.get_tipper(race_id, 'racetipps')
     for name in names:
         spieler = Spieler(name)
-        racetipps = spieler.get_race_tipps(race_id)
+        racetipps = spieler.get_race_tipps(race_id)[0]
         if name not in ergebnis:
             ergebnis[name] = {}
         ergebnis[name].update(racetipps)
@@ -42,7 +42,7 @@ def get_tipps():
     names = utils.get_tipper(race_id, 'fastestlab')
     for name in names:
         spieler = Spieler(name)
-        fastestLabtipp = spieler.get_fastestlab_tipp(race_id)
+        fastestLabtipp = spieler.get_fastestlab_tipp(race_id)[0]
         if name not in ergebnis:
             ergebnis[name] = {}
         ergebnis[name].update(fastestLabtipp)

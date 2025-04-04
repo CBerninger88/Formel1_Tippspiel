@@ -96,3 +96,4 @@ def get_tipper(race_id, table_name):
     result = cursor.fetchall()
     names = [row[0] for row in result]
     return names
+

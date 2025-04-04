@@ -32,9 +32,9 @@ def get_selection():
 
     spieler = Spieler(name)
     drivers = {}
-    drivers.update(spieler.get_quali_tipps(race_id))
-    drivers.update(spieler.get_race_tipps(race_id))
-    drivers.update(spieler.get_fastestlab_tipp(race_id))
+    drivers.update(spieler.get_quali_tipps(race_id)[0])
+    drivers.update(spieler.get_race_tipps(race_id)[0])
+    drivers.update(spieler.get_fastestlab_tipp(race_id)[0])
 
     heute = date.today()
     renndatum = datetime.strptime(request.args.get('city').split(', ')[1], "%Y-%m-%d").date()

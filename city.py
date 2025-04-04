@@ -1,12 +1,13 @@
 import requests
+
 import utils
 from db import get_db
-
+from spieler import Spieler
 
 
 class City:
     def __init__(self, city):
-        """Konstruktor, der den Namen des Spielers speichert."""
+        """Konstruktor, der den Namen der Stadt inkl race_id speichert."""
         self.city = city.capitalize()
         self.race_id = self.get_raceID()['race_id']
 
@@ -37,18 +38,13 @@ class City:
            """, (self.race_id,))
         wmStand = cursor.fetchone()
 
+        # Falls ein WM-Stand gefunden wurde, diesen formatieren und zurückgeben
         if wmStand:
-            # Dynamisch Fahrer in ein Dictionary packen
-            ergebnis = {f'wmdriver{i + 1}': wmStand[i] for i in range(len(wmStand))}
+            return {f'wmdriver{i + 1}': driver for i, driver in enumerate(wmStand)}, {'success': True, 'message': 'Ok'}
 
-        else:
-
-            if self.city == 'Melbourne':
-                return {}, {'success': False, 'message': 'Kein WM Stand beim ersten Rennen'}
-
-            return {}, {'success': False, 'message': 'WM Stand wurde noch nicht eingegeben'}
-
-        return ergebnis, {'success': True, 'message': 'Ok'}
+        # Falls kein WM-Stand vorhanden ist, entsprechende Fehlermeldung zurückgeben
+        message = 'Kein WM Stand beim ersten Rennen' if self.city == 'Melbourne' else 'WM Stand wurde noch nicht eingegeben'
+        return {}, {'success': False, 'message': message}
 
     def set_wm_stand(self, wmdrivers):
 
@@ -67,80 +63,89 @@ class City:
         db.commit()
 
     def get_lastyear_result(self):
+        """Holt die Rennergebnisse des Vorjahres aus der API"""
         ergebnis = {}
         season = 2024
         round_number = self.get_round_number(self.city, 2024)
 
         if round_number is None:
-            print(f"⚠️ Kein Rennen für {self.city} in {season} gefunden.")
-            return {}, {'success': False, 'message': f"Kein Rennen für {self.city} in {season} gefunden."}
+            msg = f"Kein Rennen für {self.city} in {season} gefunden."
+            return {}, {'success': False, 'message': msg}
 
         url = f"https://ergast.com/api/f1/{season}/{round_number}/results.json"
         response = requests.get(url)
 
         # Überprüfen, ob die Anfrage erfolgreich war
-        if response.status_code == 200:
-            data = response.json()  # JSON-Daten extrahieren
+        if response.status_code != 200:
+            return {}, {'success': False, 'message': 'Fehler beim Abrufen der API-Daten'}
 
+        try:
+
+            data = response.json()  # JSON-Daten extrahiere
             # Rennergebnisse aus den Daten extrahieren
             race_results = data["MRData"]["RaceTable"]["Races"][0]["Results"]
-            i = 0
 
             # Ergebnisse anzeigen
             for pos, result in enumerate(race_results, start=1):
                 driver_name = f"{result['Driver']['givenName'][0]}. {result['Driver']['familyName']}"
                 ergebnis[f'lydriver{pos}'] = driver_name
 
-        return ergebnis, {'success': True, 'message': 'Ok'}
+            return ergebnis, {'success': True, 'message': 'Ok'}
+
+        except (KeyError, IndexError):
+            return {}, {'success': False, 'message': 'Datenstruktur nicht wie erwartet'}
 
 
     def get_lastyear_quali(self):
+        """Holt die Startaufstellung des Vorjahres aus der API."""
         ergebnis = {}
         season = 2024
         round_number = self.get_round_number(self.city, 2024)
 
         if round_number is None:
-            print(f"⚠️ Kein Rennen für {self.city} in {season} gefunden.")
-            return {}, {'success': False, 'message': f'Kein Rennen für {self.city} in {season} gefunden.'}
-
-        url = f"https://ergast.com/api/f1/{season}/{round_number}/results.json"
-        response = requests.get(url)
-
-        if response.status_code == 200:
-            data = response.json()  # JSON-Daten extrahieren
-
-            try:
-                # Rennergebnisse aus den Daten extrahieren
-                race_results = data["MRData"]["RaceTable"]["Races"][0]["Results"]
-
-                # Ergebnisse anzeigen
-                for result in race_results:
-                    grid_position = int(result["grid"])  # Startplatz als Zahl
-                    if grid_position > 0:  # Fahrer, die aus der Box starten, haben grid = "0"
-                        driver_name = f"{result['Driver']['givenName'][0]}. {result['Driver']['familyName']}"
-                        ergebnis[f'lyqdriver{grid_position}'] = driver_name  # Fahrer nach Startposition speichern
-
-                ergebnis = dict(sorted(ergebnis.items(), key=lambda x: int(x[0].split('driver')[-1])))
-
-            except (KeyError, IndexError):
-                return {}, {'success': False, 'message': 'Datenstruktur nicht wie erwartet'}
-
-        return ergebnis, {'success': True, 'message': 'Ok'}
-
-
-    def get_lastyear_fastestLab(self):
-        season = 2024
-        round_number = self.get_round_number(self.city, 2024)
-
-        if round_number is None:
-            print(f"⚠️ Kein Rennen für {self.city} in {season} gefunden.")
-            return {}, {'success': False, 'message': f"Kein Rennen für {self.city} in {season} gefunden."}
+            msg = f"Kein Rennen für {self.city} in {season} gefunden."
+            return {}, {'success': False, 'message': msg}
 
         url = f"https://ergast.com/api/f1/{season}/{round_number}/results.json"
         response = requests.get(url)
 
         if response.status_code != 200:
-            return {}, {'success': False, 'message': f"Kein Renndaten für {self.city} in {season} von API erhalten."}
+            return {}, {'success': False, 'message': 'Fehler beim Abrufen der API-Daten'}
+
+        data = response.json()  # JSON-Daten extrahieren
+
+        try:
+            # Rennergebnisse aus den Daten extrahieren
+            qual_results = data["MRData"]["RaceTable"]["Races"][0]["Results"]
+
+            # Ergebnisse anzeigen
+            for result in qual_results:
+                grid_position = int(result["grid"])  # Startplatz als Zahl
+                if grid_position > 0:  # Fahrer, die aus der Box starten, haben grid = "0"
+                    driver_name = f"{result['Driver']['givenName'][0]}. {result['Driver']['familyName']}"
+                    ergebnis[f'lyqdriver{grid_position}'] = driver_name  # Fahrer nach Startposition speichern
+
+            ergebnis = dict(sorted(ergebnis.items(), key=lambda x: int(x[0].split('driver')[-1])))
+            return ergebnis, {'success': True, 'message': 'Ok'}
+
+        except (KeyError, IndexError):
+                return {}, {'success': False, 'message': 'Datenstruktur nicht wie erwartet'}
+
+
+    def get_lastyear_fastestLab(self):
+        """Holt die schnellste Rennrunde des Vorjahres aus der API."""
+        season = 2024
+        round_number = self.get_round_number(self.city, 2024)
+
+        if round_number is None:
+            msg = f"Kein Rennen für {self.city} in {season} gefunden."
+            return {}, {'success': False, 'message': msg}
+
+        url = f"https://ergast.com/api/f1/{season}/{round_number}/results.json"
+        response = requests.get(url)
+
+        if response.status_code != 200:
+            return {}, {'success': False, 'message': 'Fehler beim Abrufen der API-Daten'}
 
         data = response.json()
 
@@ -169,13 +174,12 @@ class City:
                     fastest_lap_info = None
 
             if fastest_driver:
-                ergebnis = {f'lyfdriver': fastest_driver}
-                return ergebnis , {'success': True, 'message': 'Ok'}
+                return {f'lyfdriver': fastest_driver} , {'success': True, 'message': 'Ok'}
             else:
                 return {}, {'success': False, 'message': 'Keine schnellste Runde in API gefunden'}
 
         except (KeyError, IndexError):
-            return {}, {'success': False, 'message': 'Keine schnellste Runde in API gefunden'}
+            return {}, {'success': False, 'message': 'Datenstruktur nicht wie erwartet'}
 
 
 
@@ -216,12 +220,79 @@ class City:
 
         return None  # Falls die API nicht erreichbar ist
 
-    def get_session_key(self, year, circuit_name):
-        url = f"https://api.openf1.org/v1/sessions?year={year}"
-        response = requests.get(url)
-        if response.status_code == 200:
-            sessions = response.json()
-            for session in sessions:
-                if circuit_name.lower() in session['location'].lower():
-                    return session['session_key']
-        return None
+    def is_tipppunkte(self):
+        db = get_db()
+        cursor = db.cursor()
+
+        cursor.execute("""
+                SELECT EXISTS (SELECT 1 FROM tipppunkte WHERE race_id = %s)
+            """, (self.race_id,))
+        exists = cursor.fetchone()[0]
+
+        return exists
+
+    def get_tipppunkte(self, calcnew):
+        users = utils.get_users()
+        tipppunkte = {}
+        gesamtpunkte = {}
+        success = True
+        message = ''
+
+        wmStand = self.get_wm_stand()
+        if not wmStand:
+            success = False
+            message = f'Es gibt für {self.city} noch keinen WM Stand'
+            return {}, {}, {'success': success, 'message': message}
+
+        race_ergebnis, status = Spieler('Ergebnis').get_race_tipps(self.race_id)
+        if not status['success']:
+            success = False
+            message = f'Es gibt für {self.city} noch kein Ergebnis'
+            return {}, {}, {'success': success, 'message': message}
+
+        no_tipps = []
+        for name in users:
+            if name == "Ergebnis":
+                continue
+            spieler = Spieler(name)
+            if calcnew:
+                qualipunkte, status1 = spieler.calculate_qualipunkte(self.race_id)
+                tipppunkte.update({name: qualipunkte})
+                if not status1['success']:
+                    no_tipps.append(name)
+                    continue
+                racepunkte, status2 = spieler.calculate_racepunkte(wmStand, self.race_id)
+                tipppunkte[name].update(racepunkte)
+                fastestLabpunkte, status3 = spieler.calculate_fastestLab_tipps(self.race_id)
+                tipppunkte[name].update(fastestLabpunkte)
+
+                if not status2['success']:
+                    success = False
+                    message += status2['message']
+                if not status3['success']:
+                    success = False
+                    message += status3['message']
+            else:
+                tipppunkte.update({name: spieler.get_tipppunkte(self.race_id)})
+                if tipppunkte == {}:
+                    success = False
+                    message += 'Keine Daten aus der Datenbank erhalten.'
+
+            gesamtpunkte.update({name: spieler.calculate_gesamtPunkte(tipppunkte[name])[0]})
+
+        if no_tipps:
+            success = True
+            message = 'Folgende Spieler haben keine Tipps abgegeben: ' + ", ".join(no_tipps)
+        else:
+            message = 'Alles ok'
+
+        status = {'success': success, 'message': message}
+        return tipppunkte, gesamtpunkte, status
+
+    def set_tipppunkte(self, tipppunkte):
+        users = utils.get_users()
+        for name in users:
+            if name == "Ergebnis":
+                continue
+            spieler = Spieler(name)
+            spieler.set_tipppunkte(self.race_id, tipppunkte[name])

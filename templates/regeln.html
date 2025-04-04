@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>F1 Driver Selection</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.2/xlsx.full.min.js"></script>
+</head>
+<body>
+<div class="container">
+    <nav>
+        <ul>
+            <li><a href="/">Home</a></li>
+            <li class="dropdown" id="tippDropdownLi">
+                <a href="javascript:void(0);" class="dropbtn" id="tippDropdownToggle">Tippabgabe</a>
+                <!-- Dropdown-Inhalte -->
+                <div class="dropdown-content" id="tippDropdownMenu">
+                    <a href="/tippabgabe">Rennen</a>
+                    <a href="/sprinttipps">Sprintrennen</a>
+                </div>
+            </li>
+            <li class="dropdown" id="ergDropdownLi">
+                <a href="javascript:void(0);" class="dropbtn" id="ergDropdownToggle">Ergebnisse</a>
+                <!-- Dropdown-Inhalte -->
+                <div class="dropdown-content" id="ergDropdownMenu">
+                    <a href="/rennergebnis">Rennergebnis</a>
+                    <a href="/gesamtergebnis">Gesamtergebnis</a>
+                </div>
+            </li>
+
+            <li><a href="/wmStand">WM Stand</a></li>
+            <li><a href="/regeln">Regeln</a></li>
+        </ul>
+    </nav>
+
+    <h2>Tipp-Bedingungen</h2>
+
+    <h3>Regeländerungen</h3>
+    <ul>
+        <li>Vor einer Saison: mit einfacher Mehrheit der anwesenden Spieler bei einer F1-Versammlung</li>
+        <li>Während der Saison: 2/3 Mehrheit, abgerundet, aller Spieler einer Saison bei einer F1-Versammlung</li>
+    </ul>
+
+    <h3>Teilnahmegebühr</h3>
+    <ul>
+        <li>50,- € (zu zahlen bis zum Beginn einer Saison)</li>
+        <li>Bei verspäteter Zahlung beträgt diese 50,- €; versäumte Rennen können nicht nachgetippt werden</li>
+    </ul>
+
+    <h3>Gewinnaufteilung</h3>
+    <ul>
+        <li>50% der Einnahmen für einzelne Siege je Rennwochenende, Gesamtsieg der Sprintrennen und des Super-Tipps</li>
+        <li>Sieger Rennwochenende = Spieler mit den meisten Punkten (bei Gleichstand: geteilt)</li>
+        <li>Dummi-Sieg → Gewinn fließt in Getränkekauf für nächste Versammlung</li>
+        <li>Sprintrennen-Gesamtsieger = nach allen Rennen meiste Punkte (bei Gleichstand: geteilt, Dummi-Regel gilt)
+        </li>
+        <li>Super-Tipp-Sieger = meiste Punkte (bei Gleichstand: geteilt, Dummi-Regel gilt)</li>
+    </ul>
+
+    <h3>Lehrgeld</h3>
+    <ul>
+        <li>Für jeden Dummi, der besser platziert ist als man selbst: 10,- € Lehrgeld</li>
+        <li>Wird zur Aufstockung der Einnahmen der nächsten Saison verwendet</li>
+    </ul>
+
+    <h3>Tippzeitraum</h3>
+    <ul>
+        <li>Bis Donnerstag 23:59 Uhr vor dem Rennen</li>
+        <li>Kein Tipp = keine Gewinnberechtigung</li>
+        <li>Ausnahme: Dummis (feste Vorgaben)</li>
+    </ul>
+
+    <h3>Super-Tipp</h3>
+    <ul>
+        <li>Eintrag bis vor dem 4. Rennen</li>
+        <li>Kein Eintrag = keine Gewinnberechtigung</li>
+        <li>Ausnahme: Dummis</li>
+    </ul>
+
+    <h3>Sprintrennen-Tipp</h3>
+    <ul>
+        <li>Analog zum Rennwochenende</li>
+    </ul>
+
+    <h3>Dummi-Tipps</h3>
+    <ul>
+        <li>Fehlende Vorjahresrennen → Dummi tippt letztes Rennen</li>
+        <li>1. Rennen Saison → WM-Dummi tippt Stand der Vorsaison</li>
+        <li>Super-Tipp → Dummis tippen Ergebnis der Vorsaison</li>
+        <li>Schnellste Runde → WM-Dummi tippt Fahrer des letzten Rennens</li>
+    </ul>
+
+    <h3>Tipps</h3>
+    <ul>
+        <li>Nur vollständige Tipps zählen</li>
+        <li>F1-Tabelle weist auf fehlenden Tipp hin</li>
+    </ul>
+
+    <h3>Punktevergabe</h3>
+    <ul>
+        <li><strong>Qualifying:</strong> Treffer Platz 1–4: 25, 20, 15, 10 Punkte oder 4 Punkte je richtiger Fahrer</li>
+        <li><strong>Rennen:</strong>
+            <ul>
+                <li>Platz 1–10 je nach WM-Tabelle (außer Rennen 1: je Treffer 10 Punkte)</li>
+                <li>1 Platz daneben: 8 Punkte</li>
+                <li>Top 10, aber falscher Platz: 5 Punkte</li>
+            </ul>
+        </li>
+        <li><strong>Schnellste Runde:</strong> Nur bei Treffer: 15 Punkte</li>
+        <li><strong>Sprintrennen:</strong>
+            <ul>
+                <li>Treffer: 10 Punkte</li>
+                <li>1 Platz daneben: 5 Punkte</li>
+                <li>Top 8, aber falscher Platz: 3 Punkte</li>
+            </ul>
+        </li>
+    </ul>
+
+    <h3>WM-Stand Punkte-Tabelle</h3>
+    <table>
+        <thead>
+        <tr>
+            <th>Platz</th>
+            <th>1.</th>
+            <th>2.</th>
+            <th>3.</th>
+            <th>4.</th>
+            <th>5.</th>
+            <th>6.</th>
+            <th>7.</th>
+            <th>8.</th>
+            <th>9.</th>
+            <th>10.</th>
+        </tr>
+        </thead>
+        <tbody>
+        <!-- Beispielhaft für die ersten 10 Plätze -->
+        <tr>
+            <td>1.</td>
+            <td>10</td>
+            <td>20</td>
+            <td>30</td>
+            <td>40</td>
+            <td>50</td>
+            <td>60</td>
+            <td>70</td>
+            <td>80</td>
+            <td>90</td>
+            <td>100</td>
+        </tr>
+        <tr>
+            <td>2.</td>
+            <td>20</td>
+            <td>10</td>
+            <td>20</td>
+            <td>30</td>
+            <td>40</td>
+            <td>50</td>
+            <td>60</td>
+            <td>70</td>
+            <td>80</td>
+            <td>90</td>
+        </tr>
+        <tr>
+            <td>3.</td>
+            <td>30</td>
+            <td>20</td>
+            <td>10</td>
+            <td>20</td>
+            <td>30</td>
+            <td>40</td>
+            <td>50</td>
+            <td>60</td>
+            <td>70</td>
+            <td>80</td>
+        </tr>
+        <!-- Rest analog -->
+        </tbody>
+    </table>
+
+    <h3>Sonstiges</h3>
+    <ul>
+        <li>Mit Bezahlung der Startgebühr werden alle Regeln anerkannt</li>
+        <li>Rechtsweg ausgeschlossen</li>
+        <li>Gewinnberechtigt ist man erst nach Zahlung der Gebühr</li>
+        <li>Unvollständige Regeln beeinträchtigen nicht die Gültigkeit des Regelwerks</li>
+    </ul>
+</div>
+
+</body>
+</html>

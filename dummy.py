@@ -43,7 +43,7 @@ class Dummy(Spieler):
                 last_race = Spieler('Ergebnis')
                 qdrivers = {}
                 if race_id > 1:
-                    qdrivers = last_race.get_quali_tipps(race_id - 1)
+                    qdrivers = last_race.get_quali_tipps(race_id - 1)[0]
                 else:
                     status['message'] = 'Kein LR Tipp für erstes Rennen'
 
@@ -107,7 +107,7 @@ class Dummy(Spieler):
                 lastRace = Spieler('Ergebnis')
                 rdrivers = {}
                 if race_id > 1:
-                    rdrivers = lastRace.get_race_tipps(race_id - 1)
+                    rdrivers = lastRace.get_race_tipps(race_id - 1)[0]
                 else:
                     status['message'] = 'Kein LR Tipp für erstes Rennen'
 
@@ -168,7 +168,7 @@ class Dummy(Spieler):
         if self.name in ['Dummy_LR', 'Dummy_WM']:
             if race_id > 1:
                 lastRace = Spieler('Ergebnis')
-                fdrivers = lastRace.get_fastestlab_tipp(race_id - 1)
+                fdrivers = lastRace.get_fastestlab_tipp(race_id - 1)[0]
 
                 if fdrivers != {}:
                     ergebnis['fdriver'] = list(fdrivers.values())[0]

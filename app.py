@@ -7,6 +7,7 @@ from routes.sprinttipps import sprinttipps_bp
 from routes.rennergebnis import rennergebnis_bp
 from routes.gesamtergebnis import gesamtergebnis_bp
 from routes.wmStand import wmStand_bp
+from routes.regeln import regeln_bp
 from db import init_db, close_connection
 import os
 
@@ -20,6 +21,7 @@ app.register_blueprint(sprinttipps_bp)
 app.register_blueprint(rennergebnis_bp)
 app.register_blueprint(gesamtergebnis_bp)
 app.register_blueprint(wmStand_bp)
+app.register_blueprint(regeln_bp)
 
 # Schließe die Datenbankverbindung nach jeder Anfrage
 app.teardown_appcontext(close_connection)
