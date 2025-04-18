@@ -68,13 +68,16 @@ def get_punkte():
     if exists and not calcNew:
 
         tipppunkte, gesamtpunkte, status = city.get_tipppunkte(False)
-        return jsonify({'punkte': gesamtpunkte, 'status': status})
+        ergebnis_sorted = sorted(gesamtpunkte.items(), key=lambda item: item[1]['gesamtPunkte'], reverse=True)
+
+        return jsonify({'punkte': ergebnis_sorted, 'status': status})
 
     else:
         tipppunkte, gesamtpunkte, status = city.get_tipppunkte(True)
+        ergebnis_sorted = sorted(gesamtpunkte.items(), key=lambda item: item[1]['gesamtPunkte'], reverse=True)
         if status['success']:
             city.set_tipppunkte(tipppunkte)
 
-    return jsonify({'punkte': gesamtpunkte, 'status': status})
+    return jsonify({'punkte': ergebnis_sorted, 'status': status})
 
 

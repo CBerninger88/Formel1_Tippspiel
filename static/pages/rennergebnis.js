@@ -39,7 +39,7 @@ export function initRennergebnisPage(){
 
     function fetchPunkte(calcNew) {
         const tabelle = document.getElementById('rennergebnisTabelle').querySelector('tbody');
-        const names = ['Alexander', 'Christine', 'Christoph', 'Jürgen', 'Simon', 'Dummy_LR', 'Dummy_LY', 'Dummy_WM'];
+        const names = ['Alexander', 'Christine', 'Christoph', 'Jürgen', 'Simon', 'Dummy_LR', 'Dummy_Kon', 'Dummy_LY', 'Dummy_WM'];
 
         const selectedCity = citySelect.value;
 
@@ -53,12 +53,21 @@ export function initRennergebnisPage(){
 
             const {punkte, status} = data;
 
-            names.forEach((name, rowIndex) => {
-                const tr = tabelle.rows[rowIndex];
-                const keys = ['qPunkte', 'rPunkte', 'fPunkte', 'gesamtPunkte'];
+            if (Object.keys(punkte).length === 0) {
+                alert(status.message);
+                return; // Beende die Funktion, wenn keine Daten vorliegen
+            }
 
-                for(let col = 1; col < tr.cells.length; col++) {
-                    tr.cells[col].textContent = punkte[name]?.[keys[col-1]] ?? '';
+            punkte.forEach((entry, rowIndex) => {
+                const [name, details] = entry;
+                const tr = tabelle.rows[rowIndex];
+
+                if(!tr) return;
+
+                const keys = ['qPunkte', 'rPunkte', 'fPunkte', 'gesamtPunkte'];
+                tr.cells[1].textContent = name ?? '';
+                for(let col = 2; col < tr.cells.length; col++) {
+                    tr.cells[col].textContent = details[keys[col-2]] ?? '';
                 }
             });
             //alert(status.message)

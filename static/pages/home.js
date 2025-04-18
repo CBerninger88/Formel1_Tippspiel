@@ -73,7 +73,7 @@ export function initHomePage(){
 
         if (!qTippTabelle || !rTippTabelle || ! fTippTabelle) return
 
-        const names = ['Alexander','Christine', 'Christoph', 'Jürgen', 'Simon',  'Dummy_LY', 'Dummy_WM', 'Dummy_LR', 'Ergebnis'];
+        const names = ['Alexander','Christine', 'Christoph', 'Jürgen', 'Simon',  'Dummy_LY', 'Dummy_Kon', 'Dummy_WM', 'Dummy_LR', 'Ergebnis'];
         const qplatzierungen = [1,2,3,4];
         const rplatzierungen = [1,2,3,4,5,6,7,8,9,10];
 
