@@ -61,10 +61,10 @@ export function initRennergebnisPage(){
                     tr.cells[col].textContent = punkte[name]?.[keys[col-1]] ?? '';
                 }
             });
-            alert(status.message)
-            //if (!status.success) {
-            //    alert(status.message);
-            //}
+            //alert(status.message)
+            if (!status.success) {
+                alert(status.message);
+            }
         })
         .catch(error => {
             console.error('Fehler:', error);

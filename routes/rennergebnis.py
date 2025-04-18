@@ -15,7 +15,10 @@ def rennergebnis():
 
 @rennergebnis_bp.route('/get_cities', methods=['GET'])
 def get_cities():
-    return utils.get_cities()
+    cities = utils.get_cities()
+    rennliste = [f"{name.upper() if details['is_sprint'] else name}, {details['datum']}" for name, details in
+                 cities.items()]
+    return jsonify(rennliste)
 
 
 @rennergebnis_bp.route('/get_users_rennergebnis', methods=['GET'])

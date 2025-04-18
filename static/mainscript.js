@@ -34,6 +34,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 module.initRennergebnisPage();
             });
 
+        case 'gesamtergebnis':
+        import('./pages/gesamtergebnis.js').then(module => {
+            module.initGesamtergebnisPage();
+        });
+
         default:
             console.log('Keine spezielle Initialisierung erforderlich');
     }

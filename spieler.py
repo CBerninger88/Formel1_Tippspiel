@@ -124,7 +124,7 @@ class Spieler:
 
                 elif tipp != race_ergebnis[i] and tipp in race_ergebnis:
                     if wmStand is not None and tipp in wmStand:
-                        j = wmStand.index(tipp)
+                        j = race_ergebnis.index(tipp)
                         if abs(i - j) > 1:
                             rpunkte.update({f'rpunkte{i+1}': 5})
                         else:

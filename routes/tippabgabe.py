@@ -31,14 +31,30 @@ def get_selection():
 
     spieler = Spieler(name)
     drivers = {}
-    drivers.update(spieler.get_quali_tipps(race_id)[0])
-    drivers.update(spieler.get_race_tipps(race_id)[0])
-    drivers.update(spieler.get_fastestlab_tipp(race_id)[0])
+    qdrivers, qstatus = spieler.get_quali_tipps(race_id)
+    rdrivers, rstatus = spieler.get_race_tipps(race_id)
+    fdriver, fstatus = spieler.get_fastestlab_tipp(race_id)
+    drivers.update(qdrivers)
+    drivers.update(rdrivers)
+    drivers.update(fdriver)
 
     heute = date.today()
     renndatum = datetime.strptime(request.args.get('city').split(', ')[1], "%Y-%m-%d").date()
     if (renndatum - heute).days < 3 and name not in ['Ergebnis', 'Dummy_LY', 'Dummy_WM', 'Dummy_LR']:
+        if not qstatus['success']:
+            qdrivers = spieler.get_quali_tipps(race_id-1)[0]
+            drivers.update(qdrivers)
+            spieler.set_quali_tipps(race_id, [qdrivers.get(f'qdriver{i+1}', '') for i in range(4)])
+        if not rstatus['success']:
+            rdrivers = spieler.get_race_tipps(race_id-1)[0]
+            drivers.update(rdrivers)
+            spieler.set_race_tipps(race_id, [rdrivers.get(f'rdriver{i+1}', '') for i in range(10)])
+        if not fstatus['success']:
+            fdriver = spieler.get_fastestlab_tipp(race_id-1)[0]
+            drivers.update(fdriver)
+            spieler.set_fastestLab_tipps(race_id, fdriver['fdriver'])
         drivers.update({'zeitschranke': True})
+
     else:
         drivers.update({'zeitschranke': False})
 
@@ -98,7 +114,10 @@ def save_selection():
 
 @tippabgabe_bp.route('/races_get_cities', methods=['GET'])
 def get_cities():
-    return utils.get_cities()
+    cities = utils.get_cities()
+    rennliste = [f"{name.upper() if details['is_sprint'] else name}, {details['datum']}" for name, details in
+                 cities.items()]
+    return jsonify(rennliste)
 
 
 @tippabgabe_bp.route('/get_drivers', methods=['GET'])

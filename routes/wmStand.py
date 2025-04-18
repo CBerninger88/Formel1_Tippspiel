@@ -13,7 +13,10 @@ def wmstand():
 
 @wmStand_bp.route('/wmStand_get_cities', methods=['GET'])
 def get_cities():
-    return utils.get_cities()
+    cities = utils.get_cities()
+    rennliste = [f"{name.upper() if details['is_sprint'] else name}, {details['datum']}" for name, details in
+                 cities.items()]
+    return jsonify(rennliste)
 
 @wmStand_bp.route('/wmStand_get_drivers', methods=['GET'])
 def get_drivers():

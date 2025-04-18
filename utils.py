@@ -4,13 +4,19 @@ from flask import jsonify
 def get_cities():
     db = get_db()
     cursor = db.cursor()
-    cursor.execute("SELECT city, date, is_sprint FROM races ORDER BY date ASC;")
+    cursor.execute("SELECT city, id, date, is_sprint FROM races ORDER BY date ASC;")
     result = cursor.fetchall()
 
     # Liste der Städte extrahieren
-    cities = [f'{row[0].upper() if row[2] else row[0]}, {row[1]}' for row in result]
-
-    return jsonify(cities)
+    cities = {
+        name: {
+            "race_id": race_id,
+            "datum": datum,
+            "is_sprint": is_sprint
+        }
+        for name, race_id, datum, is_sprint in result
+    }
+    return cities
 
 def get_sprintCities():
     db = get_db()
