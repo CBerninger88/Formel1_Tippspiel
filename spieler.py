@@ -123,27 +123,27 @@ class Spieler:
                             success = False
 
                 elif tipp != race_ergebnis[i] and tipp in race_ergebnis:
-                    if wmStand is not None and tipp in wmStand:
-                        j = race_ergebnis.index(tipp)
-                        if abs(i - j) > 1:
-                            rpunkte.update({f'rpunkte{i+1}': 5})
-                        else:
-                            rpunkte.update({f'rpunkte{i+1}': 8})
+                    #if wmStand is not None and tipp in wmStand:
+                    j = race_ergebnis.index(tipp)
+                    if abs(i - j) > 1:
+                        rpunkte.update({f'rpunkte{i+1}': 5})
                     else:
-                        if cityName == 'Melbourne':
-                            rpunkte.update({f'rpunkte{i+1}': 5})
-                        else:
-                            rpunkte.update({f'rpunkte{i+1}': 0})
-                            message = f'Kein WM Stand vorhanden oder {tipp} nicht in WM Liste'
-                            success = False
-
+                        rpunkte.update({f'rpunkte{i+1}': 8})
+                    #else:
+                    #    if cityName == 'Melbourne':
+                    #        rpunkte.update({f'rpunkte{i+1}': 5})
+                    #    else:
+                    #        rpunkte.update({f'rpunkte{i+1}': 0})
+                    #        message = f'Kein WM Stand vorhanden oder {tipp} nicht in WM Liste'
+                    #        success = False
                 else:
                     rpunkte.update({f'rpunkte{i+1}': 0})
+
         if not status1['success']:
             message += f'Keine Racetipps für {self.name}.'
             success = False
         if not status2['success']:
-            message += f' Noch kein Ergebnis eingetragen.'
+            message += f'Noch kein Ergebnis eingetragen.'
             success = False
 
         status = {'success': success, 'message': message}
