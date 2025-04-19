@@ -54,7 +54,7 @@ def get_tipps():
         names = utils.get_tipper(race_id, 'sprinttipps')
         for name in names:
             spieler = Spieler(name)
-            sprinttipps = spieler.get_sprint_tipps(race_id)
+            sprinttipps = spieler.get_sprint_tipps(race_id)[0]
             if name not in ergebnis:
                 ergebnis[name] = {}
             ergebnis[name].update(sprinttipps)

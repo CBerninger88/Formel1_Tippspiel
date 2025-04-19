@@ -227,9 +227,16 @@ class Spieler:
                         """, (self.user_id, race_id))
             sresult = cursor.fetchone()
 
-            ergebnis.update({f'sdriver{i + 1}': sresult[i] for i in range(len(sresult))})
+            if sresult is None:
+                msg = f'Keine Sprinttipps für {self.name} in der Datenbank'
+                return {}, {'success': False, 'message': msg}  # Falls keine Daten vorhanden sind, gib ein leeres Dict zurück
 
-        return ergebnis
+            ergebnis.update({f'sdriver{i + 1}': sresult[i] for i in range(len(sresult))})
+            status = {'success': True, 'message': 'Alles ok'}
+        else:
+            status = {'success': False, 'message': 'Es handelt sich nicht um eine Sprintrennen'}
+
+        return ergebnis, status
 
     def get_quali_tipps(self, race_id):
         ergebnis = {}

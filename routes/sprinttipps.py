@@ -27,7 +27,7 @@ def get_sprinttipps():
 
     spieler = Spieler(name)
     drivers = {}
-    drivers.update(spieler.get_sprint_tipps(race_id))
+    drivers.update(spieler.get_sprint_tipps(race_id)[0])
 
     return jsonify(drivers)
 
