@@ -39,7 +39,7 @@ export function initRennergebnisPage(){
 
     function fetchPunkte(calcNew) {
         const tabelle = document.getElementById('rennergebnisTabelle').querySelector('tbody');
-        const names = ['Alexander', 'Christine', 'Christoph', 'Jürgen', 'Simon', 'Dummy_LR', 'Dummy_Kon', 'Dummy_LY', 'Dummy_WM'];
+        const names = ['Alexander', 'Christine', 'Christoph', 'Jürgen', 'Klaus', 'Simon', 'Dummy_LR', 'Dummy_Kon', 'Dummy_LY', 'Dummy_WM'];
 
         const selectedCity = citySelect.value;
 
