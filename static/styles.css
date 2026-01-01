@@ -98,11 +98,14 @@ table {
     width: 100%;
     border-collapse: collapse;
     margin: 20px;
+    border-radius: 8px;
+    overflow: hidden;
 }
 
 th, td {
     border: 1px solid #ddd;
     padding: 8px;
+    text-align: left;
     white-space: nowrap;
 }
 
@@ -110,7 +113,75 @@ th {
     background-color: #f2f2f2;
 }
 
-/* Top-Bar */
+h1 {
+    text-align: center;
+    color: #333;
+}
+
+.form-group {
+    display: flex;
+    align-items: center;
+    margin-top: 10px;
+}
+
+/* Label soll etwas Abstand zum Dropdown haben */
+.form-group label {
+    margin-right: 10px;
+    width: 100px; /* Einheitliche Breite für Labels */
+}
+
+/* Dropdown passt sich an */
+.form-group select {
+    width: 60%; /* Schmaler als vorher */
+    padding: 8px 12px; /* Weniger Padding für kompakteres Design */
+    font-size: 14px; /* Kleinere Schriftgröße */
+    border: 1px solid #ccc; /* Dezente Umrandung */
+    border-radius: 4px; /* Abgerundete Ecken */
+    background-color: #fff; /* Weißer Hintergrund */
+    appearance: none; /* Entfernt den Browser-Standardstil */
+    -webkit-appearance: none; /* Für Safari */
+    -moz-appearance: none; /* Für Firefox */
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"><path fill="%23999" d="M7 10l5 5 5-5z"/></svg>');
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 12px;
+    cursor: pointer;
+    transition: border-color 0.3s ease;
+}
+
+label {
+    display: block;
+    margin-top: 20px;
+    font-weight: bold;
+    color: #555;
+}
+
+select {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+}
+
+button {
+    width: 100%;
+    padding: 10px;
+    margin-top: 20px;
+    background-color: #007BFF;
+    color: #fff;
+    border: none;
+    border-radius: 3px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+/* Übergeordnete Leiste */
 .top-bar {
     display: flex;
     justify-content: space-between;
@@ -121,20 +192,60 @@ th {
     padding: 0 10px;
 }
 
-.tipprunde-container, .login-status {
+.tipprunde-container,
+.login-status {
     display: inline-flex;
     align-items: center;
     gap: 5px;
 }
 
-.tipprunde-select, .login-status button {
+.tipprunde-container label {
+    line-height: 1em; /* gleiche Höhe wie Dropdown */
+}
+
+.tipprunde-select,
+.login-status button {
     all: unset;
     font-size: 0.8em;
-    line-height: 1em;
+    line-height: 1em; /* gleiche Höhe */
     padding: 2px 6px;
     border: 1px solid #555;
     border-radius: 3px;
     background-color: #f0f0f0;
     color: #555;
     cursor: pointer;
+    min-width: auto;
+    width: auto;
+}
+
+/* Registrieren-Button unter Login */
+.register-btn {
+    display: block; /* Neue Zeile */
+    margin-top: 10px; /* Abstand zum Login-Button */
+    padding: 8px 15px;
+    font-size: 0.9em;
+    text-align: center;
+    background-color: #007BFF;
+    color: #fff;
+    border-radius: 4px;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.register-btn:hover {
+    background-color: #218838;
+}
+
+.login-logo {
+    display: block; /* block-Element, damit margin wirkt */
+    margin: 0 auto 15px; /* oben 0, auto = horizontal zentriert, unten 15px Abstand */
+    max-width: 50%; /* passt sich an die Breite an */
+    height: auto; /* Seitenverhältnis bleibt erhalten */
+}
+
+.form-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 10px; /* Abstand zwischen Buttons */
+    margin-top: 20px;
 }

@@ -43,23 +43,40 @@
 
     <!-- Navigation -->
     <nav>
-        <ul>
-            <li><a href="/">Home</a></li>
-
-            <li class="dropdown">
-                <a href="javascript:void(0);" class="dropbtn">Tippabgabe</a>
-                <div class="dropdown-content">
-                    <a href="/tippabgabe">Rennen</a>
-                    <a href="/sprinttipps">Sprintrennen</a>
-                </div>
-            </li>
-
-            <li><a href="/gesamtergebnis">Tabelle</a></li>
-            <li><a href="/wmStand">WM Stand</a></li>
-            <li><a href="/regeln">Regeln</a></li>
-            <li><a href="/profile">Profil</a></li>
-        </ul>
+        <div class="nav-scroll">
+            <ul>
+                <li><a href="/">Home</a></li>
+                <li class="drop-wrapper">
+                    <a href="javascript:void(0);" class="dropbtn" data-dropdown="dropdown-tippabgabe">Tippabgabe</a>
+                </li>
+                <li><a href="/gesamtergebnis">Tabelle</a></li>
+                <li><a href="/wmStand">WM Stand</a></li>
+                <li><a href="/regeln">Regeln</a></li>
+                <li><a href="/profile">Profil</a></li>
+                {% if current_user.is_authenticated and current_user.is_admin %}
+                <li class="drop-wrapper">
+                    <a href="javascript:void(0);" class="dropbtn" data-dropdown="dropdown-admin">Admin</a>
+                </li>
+                {% endif %}
+            </ul>
+        </div>
     </nav>
+
+    <!-- Dropdowns jetzt **außerhalb der Navbar** -->
+    <div class="dropdown-content-wrapper">
+        <div class="dropdown-content" id="dropdown-tippabgabe">
+            <a href="/tippabgabe">Rennen</a>
+            <a href="/sprinttipps">Sprintrennen</a>
+        </div>
+        {% if current_user.is_authenticated and current_user.is_admin %}
+        <div class="dropdown-content" id="dropdown-admin">
+            <a href="/admin/rennergebnisse">🏁 Rennergebnisse</a>
+            <a href="/admin/users">👤 User verwalten</a>
+            <a href="/admin/tipprunden">📋 Tipprunden</a>
+            <a href="/admin/settings">⚙️ Einstellungen</a>
+        </div>
+        {% endif %}
+    </div>
 
     <h2>Tipp-Bedingungen</h2>
 
@@ -215,5 +232,6 @@
     </ul>
 </div>
 
+<script src="{{ url_for('static', filename='nav_dropdown.js') }}"></script>
 </body>
 </html>
