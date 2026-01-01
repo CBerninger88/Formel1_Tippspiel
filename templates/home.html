@@ -46,33 +46,36 @@
 
         <!-- Navigation -->
         <nav>
-            <ul>
-                <li><a href="/">Home</a></li>
+            <div class="nav-scroll">
+                <ul>
+                    <li><a href="/">Home</a></li>
 
-                <li class="dropdown">
-                    <a href="javascript:void(0);" class="dropbtn">Tippabgabe</a>
-                    <div class="dropdown-content">
-                        <a href="/tippabgabe">Rennen</a>
-                        <a href="/sprinttipps">Sprintrennen</a>
-                    </div>
-                </li>
+                    <li class="dropdown">
+                        <a href="javascript:void(0);" class="dropbtn">Tippabgabe</a>
+                        <div class="dropdown-content">
+                            <a href="/tippabgabe">Rennen</a>
+                            <a href="/sprinttipps">Sprintrennen</a>
+                        </div>
+                    </li>
 
-                <li><a href="/gesamtergebnis">Tabelle</a></li>
-                <li><a href="/wmStand">WM Stand</a></li>
-                <li><a href="/regeln">Regeln</a></li>
-                <li><a href="/profile">Profil</a></li>
-                {% if current_user.is_authenticated and current_user.is_admin %}
-                <li class="dropdown">
-                    <a href="javascript:void(0);" class="dropbtn">Admin</a>
-                    <div class="dropdown-content">
-                        <a href="/admin/rennergebnisse">🏁 Rennergebnisse</a>
-                        <a href="/admin/users">👤 User verwalten</a>
-                        <a href="/admin/tipprunden">📋 Tipprunden</a>
-                        <a href="/admin/settings">⚙️ Einstellungen</a>
-                    </div>
-                </li>
-                {% endif %}
-            </ul>
+                    <li><a href="/gesamtergebnis">Tabelle</a></li>
+                    <li><a href="/wmStand">WM Stand</a></li>
+                    <li><a href="/regeln">Regeln</a></li>
+                    <li><a href="/profile">Profil</a></li>
+
+                    {% if current_user.is_authenticated and current_user.is_admin %}
+                    <li class="dropdown">
+                        <a href="javascript:void(0);" class="dropbtn">Admin</a>
+                        <div class="dropdown-content">
+                            <a href="/admin/rennergebnisse">🏁 Rennergebnisse</a>
+                            <a href="/admin/users">👤 User verwalten</a>
+                            <a href="/admin/tipprunden">📋 Tipprunden</a>
+                            <a href="/admin/settings">⚙️ Einstellungen</a>
+                        </div>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
         </nav>
 
         <h1>Formel 1 Tippspiel</h1>

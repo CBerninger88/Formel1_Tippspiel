@@ -17,11 +17,7 @@ body {
 /* Navigation */
 nav {
     background-color: #333;
-    /*height: 100%;*/
-    position: relative; /* Setzt das Dropdown relativ zur Navigation */
-    display: flex; /* Flexbox für Navigation */
-    flex-wrap: nowrap; /* Verhindert Umbruch von Navigationselementen */
-    overflow-x: visible;/* Ermöglicht horizontales Scrollen */
+    position: relative;
     white-space: nowrap;
 }
 
@@ -54,6 +50,25 @@ nav ul li a {
 /* Hover-Effekt für Links */
 nav ul li a:hover {
     background-color: #111;
+}
+
+.nav-scroll {
+    overflow-x: auto;       /* horizontal scrollen */
+    overflow-y: visible;    /* 🔑 Dropdowns dürfen sichtbar sein */
+    -webkit-overflow-scrolling: touch;
+}
+
+.nav-scroll ul {
+    display: flex;
+    flex-wrap: nowrap;
+    margin: 0;
+    padding: 0 10px;
+    list-style: none;
+}
+
+.nav-scroll ul li {
+    flex-shrink: 0;         /* Einträge schrumpfen nicht */
+    position: relative;     /* für Dropdown */
 }
 
 .dropdown {
