@@ -10,7 +10,7 @@ body {
     margin: 50px auto;
     padding: 20px;
     background-color: #fff;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
     border-radius: 5px;
 }
 
@@ -21,115 +21,68 @@ nav {
     white-space: nowrap;
 }
 
-/* Navigation Liste */
 nav ul {
-    list-style-type: none;
-    margin: 10px 10px;
-    padding: 0;
+    list-style: none;
+    margin: 10px 0;
+    padding: 0 10px;
     display: flex;
     align-items: center;
+}
+
+nav ul li {
+    flex-shrink: 0;
     position: relative;
 }
 
-/* Listenelemente */
-nav ul li {
-    position: relative; /* Wichtig für das Dropdown */
- }
-
-/* Links in der Navigation */
 nav ul li a {
     display: block;
     color: white;
-    text-align: center;
     padding: 14px 16px;
     text-decoration: none;
     cursor: pointer;
-    /*white-space: nowrap;*/
 }
 
-/* Hover-Effekt für Links */
 nav ul li a:hover {
     background-color: #111;
 }
 
+/* Scrollbare Navbar */
 .nav-scroll {
-    display: flex;
-    flex-wrap: nowrap;
-    overflow-x: visible;       /* horizontal scrollen */    /* 🔑 Dropdowns dürfen sichtbar sein */
-    white-space: nowrap;
+    overflow-x: auto;
+    overflow-y: visible;
+    -webkit-overflow-scrolling: touch;
 }
 
-.nav-scroll ul {
-    display: flex;
-    margin: 0;
-    padding: 0 10px;
-    list-style: none;
-}
-
-.nav-scroll ul li {
-    flex-shrink: 0;         /* Einträge schrumpfen nicht */
-    position: relative;     /* für Dropdown */
-}
-
-.dropdown {
-    position: relative;
-    /*overflow-y: visible;*/
-}
-/* Dropdown-Menü */
-.dropdown-content {
-    display: none;  /* Standardmäßig unsichtbar */
-    position: absolute; /* Direkt unter dem Navigationspunkt */
-    top: 100%; /* Positioniert das Dropdown direkt unter der Navigationsleiste */
+/* Dropdown-Wrapper */
+.dropdown-content-wrapper {
+    position: absolute;
+    top: 0;
     left: 0;
+    width: 100%;
+    pointer-events: none;
+    z-index: 1000;
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
     background-color: #f9f9f9;
     min-width: 160px;
-    box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
-    z-index: 9999; /* Über der Navigation */
+    box-shadow: 0px 8px 16px rgba(0,0,0,0.2);
+    pointer-events: auto;
+    z-index: 9999;
 }
 
-/*Dropdown sichtbar beim Hover */
-/*
-.dropdown:hover .dropdown-content {
-    display: block;
-}
-*/
-/* Dropdown-Links */
 .dropdown-content a {
-    color: black;
-    padding: 12px 16px;
-    text-decoration: none;
     display: block;
-    position: relative;
+    padding: 12px 16px;
+    color: black;
+    text-decoration: none;
 }
 
-/* Hover-Effekt für Links im Dropdown */
 .dropdown-content a:hover {
     background-color: #f1f1f1;
 }
-
-.dropdown:focus-within .dropdown-content,
-.dropdown:hover .dropdown-content {
-    display: block;
-}
-
-/* 📱 Mobile Scrollbar */
-@media (max-width: 768px) {
-    .nav-scroll {
-        overflow-x: auto;             /* scrollbar bei zu vielen Items */
-        -webkit-overflow-scrolling: touch;
-    }
-}
-
-
-/* Styling des Links, der das Dropdown öffnet */
-.dropbtn {
-    display: block;
-    color: white;
-    text-align: center;
-    padding: 14px 16px;
-    cursor: pointer;
-}
-
 
 /* Tabelle */
 .table-wrapper {
@@ -145,93 +98,19 @@ table {
     width: 100%;
     border-collapse: collapse;
     margin: 20px;
-    border-radius: 8px;
-    overflow: hidden;
 }
 
 th, td {
     border: 1px solid #ddd;
     padding: 8px;
-    text-align: left;
-    white-space: nowrap; /* Verhindert Zeilenumbruch */
+    white-space: nowrap;
 }
 
 th {
     background-color: #f2f2f2;
 }
 
-
-h1 {
-    text-align: center;
-    color: #333;
-}
-
-
-.form-group {
-    display: flex;
-    align-items: center;
-    margin-top: 10px;
-}
-
-/* Label soll etwas Abstand zum Dropdown haben */
-.form-group label {
-    margin-right: 10px;
-    width: 100px; /* Einheitliche Breite für Labels */
-}
-
-/* Dropdown passt sich an */
-.form-group select {
-    width: 60%;               /* Schmaler als vorher */
-    padding: 8px 12px;        /* Weniger Padding für kompakteres Design */
-    font-size: 14px;          /* Kleinere Schriftgröße */
-    border: 1px solid #ccc;   /* Dezente Umrandung */
-    border-radius: 4px;       /* Abgerundete Ecken */
-    background-color: #fff;   /* Weißer Hintergrund */
-    appearance: none;         /* Entfernt den Browser-Standardstil */
-    -webkit-appearance: none; /* Für Safari */
-    -moz-appearance: none;    /* Für Firefox */
-    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"><path fill="%23999" d="M7 10l5 5 5-5z"/></svg>');
-    background-repeat: no-repeat;
-    background-position: right 10px center;
-    background-size: 12px;
-    cursor: pointer;
-    transition: border-color 0.3s ease;
-}
-
-
-label {
-    display: block;
-    margin-top: 20px;
-    font-weight: bold;
-    color: #555;
-}
-
-select {
-    width: 100%;
-    padding: 10px;
-    margin-top: 5px;
-    font-size: 16px;
-    border: 1px solid #ccc;
-    border-radius: 3px;
-}
-
-button {
-    width: 100%;
-    padding: 10px;
-    margin-top: 20px;
-    background-color: #007BFF;
-    color: #fff;
-    border: none;
-    border-radius: 3px;
-    font-size: 16px;
-    cursor: pointer;
-}
-
-button:hover {
-    background-color: #0056b3;
-}
-
-/* Übergeordnete Leiste */
+/* Top-Bar */
 .top-bar {
     display: flex;
     justify-content: space-between;
@@ -242,94 +121,20 @@ button:hover {
     padding: 0 10px;
 }
 
-.tipprunde-container {
+.tipprunde-container, .login-status {
     display: inline-flex;
     align-items: center;
     gap: 5px;
 }
 
-.tipprunde-container label {
-    line-height: 1em; /* gleiche Höhe wie Dropdown */
-}
-
-.tipprunde-select {
+.tipprunde-select, .login-status button {
     all: unset;
     font-size: 0.8em;
-    line-height: 1em;    /* gleiche Höhe */
+    line-height: 1em;
     padding: 2px 6px;
     border: 1px solid #555;
     border-radius: 3px;
     background-color: #f0f0f0;
     color: #555;
     cursor: pointer;
-    min-width: auto;
-    width: auto;
 }
-
-.login-status {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-}
-
-.login-status button {
-    all: unset;
-    font-size: 0.8em;
-    line-height: 1em;    /* gleiche Höhe */
-    padding: 2px 6px;
-    border: 1px solid #555;
-    border-radius: 3px;
-    background-color: #f0f0f0;
-    color: #555;
-    cursor: pointer;
-    min-width: auto;
-    width: auto;
-}
-
-.login-status button {
-    all: unset;
-    font-size: 0.8em;       /* gleiche Schriftgröße */
-    padding: 2px 6px;
-    border: 1px solid #555;
-    border-radius: 3px;
-    background-color: #f0f0f0;
-    color: #555;             /* gleiche Farbe */
-    cursor: pointer;
-    min-width: auto;
-    width: auto;
-}
-
-/* Registrieren-Button unter Login */
-.register-btn {
-    display: block;           /* Neue Zeile */
-    margin-top: 10px;         /* Abstand zum Login-Button */
-    padding: 8px 15px;
-    font-size: 0.9em;
-    text-align: center;
-    background-color: #007BFF;
-    color: #fff;
-    border-radius: 4px;
-    text-decoration: none;
-    cursor: pointer;
-}
-
-.register-btn:hover {
-    background-color: #218838;
-}
-
-
-.login-logo {
-    display: block;      /* block-Element, damit margin wirkt */
-    margin: 0 auto 15px; /* oben 0, auto = horizontal zentriert, unten 15px Abstand */
-    max-width: 50%;      /* passt sich an die Breite an */
-    height: auto;        /* Seitenverhältnis bleibt erhalten */
-}
-
-.form-buttons {
-    display: flex;
-    flex-direction: column;
-    gap: 10px; /* Abstand zwischen Buttons */
-    margin-top: 20px;
-}
-
-
