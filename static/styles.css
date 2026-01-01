@@ -43,7 +43,7 @@ nav ul li a {
     text-align: center;
     padding: 14px 16px;
     text-decoration: none;
-    position: static;
+    cursor: pointer;
     /*white-space: nowrap;*/
 }
 
@@ -53,14 +53,14 @@ nav ul li a:hover {
 }
 
 .nav-scroll {
-    overflow-x: auto;       /* horizontal scrollen */
-    overflow-y: visible;    /* 🔑 Dropdowns dürfen sichtbar sein */
-    -webkit-overflow-scrolling: touch;
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: visible;       /* horizontal scrollen */    /* 🔑 Dropdowns dürfen sichtbar sein */
+    white-space: nowrap;
 }
 
 .nav-scroll ul {
     display: flex;
-    flex-wrap: nowrap;
     margin: 0;
     padding: 0 10px;
     list-style: none;
@@ -107,9 +107,17 @@ nav ul li a:hover {
     background-color: #f1f1f1;
 }
 
-/* 🔑 Öffnen per Klick (Fokus), kein Hover */
-.dropdown:focus-within .dropdown-content {
+.dropdown:focus-within .dropdown-content,
+.dropdown:hover .dropdown-content {
     display: block;
+}
+
+/* 📱 Mobile Scrollbar */
+@media (max-width: 768px) {
+    .nav-scroll {
+        overflow-x: auto;             /* scrollbar bei zu vielen Items */
+        -webkit-overflow-scrolling: touch;
+    }
 }
 
 
@@ -122,10 +130,6 @@ nav ul li a:hover {
     cursor: pointer;
 }
 
-/* Hover-Effekt für das Dropdown-Label */
-.dropbtn:hover {
-    background-color: #111;
-}
 
 /* Tabelle */
 .table-wrapper {
