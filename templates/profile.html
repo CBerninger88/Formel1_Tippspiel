@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profil - F1 Tippspiel</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+
+<body data-page-id="profile">
+
+    <div class="container">
+
+         <!-- Login-Status Leiste -->
+
+        <!-- Linke Seite: Tipprunde Dropdown -->
+        <div class="top-bar">
+            <!-- Linke Seite: Tipprunde -->
+            <div class="tipprunde-container">
+                Tipprunde:
+                <select id="tipprunde-select" class="tipprunde-select">
+                    <option value="Family">Family</option>
+                </select>
+            </div>
+
+            <!-- Rechte Seite: Login-Status -->
+            <div class="login-status">
+                {% if current_user.is_authenticated %}
+                Eingeloggt als: {{ current_user.username }}
+                <form action="{{ url_for('auth.logout') }}" method="get" style="display:inline;">
+                    <button type="submit" class="logout-btn">Logout</button>
+                </form>
+                {% else %}
+                <a href="{{ url_for('auth.login') }}">Login</a>
+                {% endif %}
+            </div>
+        </div>
+        <nav>
+            <ul>
+                <li><a href="/">Home</a></li>
+                <li class="dropdown" id="tippDropdownLi">
+                    <a href="javascript:void(0);" class="dropbtn" id="tippDropdownToggle">Tippabgabe</a>
+                       <!-- Dropdown-Inhalte -->
+                    <div class="dropdown-content" id="tippDropdownMenu">
+                        <a href="/tippabgabe">Rennen</a>
+                        <a href="/sprinttipps">Sprintrennen</a>
+                    </div>
+                </li>
+                <li class="dropdown" id="ergDropdownLi">
+                    <a href="javascript:void(0);" class="dropbtn" id="ergDropdownToggle">Tabelle</a>
+                       <!-- Dropdown-Inhalte -->
+                    <div class="dropdown-content" id="ergDropdownMenu">
+                        <a href="/rennergebnis">Einzel-Rennen</a>
+                        <a href="/gesamtergebnis">Gesamt</a>
+                    </div>
+                </li>
+
+                <li><a href="/wmStand">WM Stand</a></li>
+                <li><a href="/regeln">Regeln</a></li>
+                <li><a href="/profile">Profil</a></li>
+
+            </ul>
+        </nav>
+
+
+
+        <!-- Logo & Titel -->
+        <h1>Formel 1 Tippspiel</h1>
+        <img src="{{ url_for('static', filename='Logo_Gans_und_Goessel.jpg') }}"
+             alt="Formel 1 Logo"
+             class="login-logo">
+
+        <!-- Username anzeigen -->
+        <h2 class="login-title">Hallo, {{ current_user.username }}!</h2>
+
+        <!-- Buttons -->
+        <div class="form-buttons">
+            <!-- Tipprunde erstellen -->
+            <a href="{{ url_for('tipprunden.create') }}" class="register-btn">
+                Tipprunde erstellen
+            </a>
+
+            <!-- Tipprunde beitreten -->
+            <a href="{{ url_for('tipprunden.join') }}" class="register-btn">
+                Tipprunde beitreten
+            </a>
+        </div>
+
+        <!-- Flash-Messages -->
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <ul class="flash-messages">
+                    {% for message in messages %}
+                        <li>{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        {% endwith %}
+    </div>
+
+</body>
+</html>

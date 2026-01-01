@@ -4,7 +4,7 @@ export function initTippabgabePage(){
     console.log('Tippabgabe- Seite Initialisierung');
 
 
-    const nameSelect = document.getElementById('name');
+    //const nameSelect = document.getElementById('name');
     const citySelect = document.getElementById('city');
     const qdriverSelects = Array.from(document.querySelectorAll('[id^="qdriver"]'));
     const driverSelects = Array.from(document.querySelectorAll('[id^="driver"]'));
@@ -12,7 +12,7 @@ export function initTippabgabePage(){
     const saveButton = document.getElementById('save');
 
     // 1. Dynamische Namen und Städte
-
+    /*
     fetch('/get_users')
         .then(response => response.json())
         .then(names => {
@@ -21,6 +21,7 @@ export function initTippabgabePage(){
         .catch(error => {
             console.error('Fehler beim Laden der Namen:', error);
         });
+    */
 
     fetch('/races_get_cities')
         .then(response => response.json())
@@ -45,43 +46,27 @@ export function initTippabgabePage(){
         });
 
 
-    nameSelect.addEventListener('change', fetchSelection);
+    //nameSelect.addEventListener('change', fetchSelection);
     citySelect.addEventListener('change', fetchSelection);
     saveButton.addEventListener('click', saveSelection);
 
 
     // Event-Listener für das Ändern der Stadt oder Saison
     function fetchSelection() {
-        const selectedName = nameSelect.value;
+        //const selectedName = nameSelect.value;
         const selectedCity = citySelect.value;
 
-        if (selectedName == 'Dummy_LR' || selectedName == 'Dummy_WM' || selectedName == 'Dummy_LY') {
-            fetch(`/get_dummy?name=${selectedName}&city=${selectedCity}`)
-            .then(response => response.json())
-            .then(data => {
+        const select = document.getElementById('tipprunde-select');
+        const option = select.options[select.selectedIndex];
+        const tipprunde_id = option.dataset.id;
 
-                const drivers = data.drivers;
-                const status = data.status;
+        let selectionUrl = `/get_selection?city=${encodeURIComponent(selectedCity)}`;
 
-                qdriverSelects.forEach((qDriverSelect, index) => {
-                   qDriverSelect.disabled = false;
-                   const qDriverKey = `qdriver${index + 1}`;
-                   qDriverSelect.value = drivers[qDriverKey] || "";
-                });
-                driverSelects.forEach((driverSelect, index) => {
-                   driverSelect.disabled = false;
-                   const driverKey = `rdriver${index + 1}`;
-                   driverSelect.value = drivers[driverKey] || "";
-                });
-                fdriverSelect.disabled = false;
-                fdriverSelect.value = drivers[`fdriver`] || "";
+        if (tipprunde_id) {
+            selectionUrl += `&tipprunde_id=${tipprunde_id}`;
+        }
 
-                if (!status.success) {
-                    alert(status.message);
-                }
-            });
-        } else {
-            fetch(`/get_selection?name=${selectedName}&city=${selectedCity}`)
+        fetch(selectionUrl)
             .then(response => response.json())
             .then(data => {
                 qdriverSelects.forEach((qDriverSelect, index) => {
@@ -105,18 +90,20 @@ export function initTippabgabePage(){
                 fdriverSelect.disabled = false;
                 if (data['zeitschranke']) {
                         fdriverSelect.disabled = true;
-                    }
+                }
             });
-        }
 
     }
 
     // Event-Listener für den Klick auf den Speicher-Button
     function saveSelection() {
-        const name = nameSelect.value;
         const city = citySelect.value;
         const qDriverData = qdriverSelects.map(driver => driver.value);
         const driverData = driverSelects.map(driver => driver.value);
+
+        const select = document.getElementById('tipprunde-select');
+        const option = select.options[select.selectedIndex];
+        const tipprunde_id = option.dataset.id;
 
         // Dictionary mit Keys (driver1, driver2, etc.) generieren
         const qDrivers = {};
@@ -136,7 +123,7 @@ export function initTippabgabePage(){
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ name, city, ...qDrivers, ...drivers, ...fDriver}),
+            body: JSON.stringify({city, ...qDrivers, ...drivers, ...fDriver, tipprunde_id: tipprunde_id ?? null}),
         })
         .then(response => response.json())
         .then(data => {

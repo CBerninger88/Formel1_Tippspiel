@@ -1,7 +1,11 @@
-from flask import Blueprint, render_template, request, jsonify
+import psycopg2
+from flask_login import current_user, login_required
+from psycopg2.extras import RealDictCursor
+from flask import Blueprint, render_template, request, jsonify, session, app
 
 
 import utils
+from db import get_db
 from dummy import Dummy
 from spieler import Spieler
 from datetime import date
@@ -12,18 +16,62 @@ tippabgabe_bp = Blueprint('tippabgabe', __name__)
 
 # Registrieren von Routen bei dem Blueprint
 @tippabgabe_bp.route('/tippabgabe')
+@tippabgabe_bp.route("/tippabgabe/tipprunde/<int:tipprunde_id>")
+@login_required
 def tippabgabe():
-    return render_template('tippabgabe.html')
+    db = get_db()
+    cursor = db.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+    # 🔹 Tipprunden des aktuellen Users
+    cursor.execute("""
+            SELECT t.id, t.name
+            FROM tipprunden t
+            JOIN tipprunden_user tu ON tu.tipprunde_id = t.id
+            WHERE tu.user_id = %s
+            ORDER BY t.name
+        """, (current_user.id,))
+    tipprunden = cursor.fetchall()
+
+    # 🔹 Fall: User ist in keiner Tipprunde
+    if not tipprunden:
+        return render_template(
+            "tippabgabe.html",
+            tipprunden=[],
+            users=[current_user],
+            tipprunde_id=None
+        )
+
+    # 🔹 Fallback: erste Tipprunde
+    tipprunde_id = session.get('tipprunde_id') or tipprunden[0]['id']
+
+    # 🔹 User der aktiven Tipprunde
+    cursor.execute("""
+            SELECT u.id, u.username
+            FROM users u
+            JOIN tipprunden_user tu ON tu.user_id = u.id
+            WHERE tu.tipprunde_id = %s
+            ORDER BY u.username
+        """, (tipprunde_id,))
+    users = cursor.fetchall()
+
+    return render_template("tippabgabe.html",
+                           tipprunden=tipprunden,
+                           users=users,
+                           tipprunde_id=tipprunde_id
+                           )
+
 
 @tippabgabe_bp.route('/get_selection')
 def get_selection():
-    name = request.args.get('name')
+    name = current_user.username
     city = request.args.get('city').split(', ')[0].capitalize()
+    tipprunde_id = request.args.get('tipprunde_id')
+    saison = app.current_app.config['SAISON']
 
-    if name not in utils.get_users():
-       return {}
+    if tipprunde_id is None:
+        tipprunde_id = 0
 
-    race_id = utils.get_raceID(city)
+    race_id = utils.get_raceID(city, saison)
     if not race_id['success']:
         return {}
     else:
@@ -31,28 +79,28 @@ def get_selection():
 
     spieler = Spieler(name)
     drivers = {}
-    qdrivers, qstatus = spieler.get_quali_tipps(race_id)
-    rdrivers, rstatus = spieler.get_race_tipps(race_id)
-    fdriver, fstatus = spieler.get_fastestlab_tipp(race_id)
+    qdrivers, qstatus = spieler.get_quali_tipps(race_id, tipprunde_id)
+    rdrivers, rstatus = spieler.get_race_tipps(race_id, tipprunde_id)
+    fdriver, fstatus = spieler.get_fastestlab_tipp(race_id, tipprunde_id)
     drivers.update(qdrivers)
     drivers.update(rdrivers)
     drivers.update(fdriver)
 
     heute = date.today()
     renndatum = datetime.strptime(request.args.get('city').split(', ')[1], "%Y-%m-%d").date()
-    if (renndatum - heute).days < 3 and name not in ['Ergebnis', 'Dummy_LY', 'Dummy_WM', 'Dummy_LR', 'Dummy_Kon']:
+    if (renndatum - heute).days < 3:
         if not qstatus['success']:
-            qdrivers = spieler.get_quali_tipps(race_id-1)[0]
+            qdrivers = spieler.get_quali_tipps(race_id-1, tipprunde_id)[0]
             drivers.update(qdrivers)
-            spieler.set_quali_tipps(race_id, [qdrivers.get(f'qdriver{i+1}', '') for i in range(4)])
+            spieler.set_quali_tipps(race_id, [qdrivers.get(f'qdriver{i+1}', '') for i in range(4)], tipprunde_id)
         if not rstatus['success']:
-            rdrivers = spieler.get_race_tipps(race_id-1)[0]
+            rdrivers = spieler.get_race_tipps(race_id-1, tipprunde_id)[0]
             drivers.update(rdrivers)
-            spieler.set_race_tipps(race_id, [rdrivers.get(f'rdriver{i+1}', '') for i in range(10)])
+            spieler.set_race_tipps(race_id, [rdrivers.get(f'rdriver{i+1}', '') for i in range(10)], tipprunde_id)
         if not fstatus['success']:
-            fdriver = spieler.get_fastestlab_tipp(race_id-1)[0]
+            fdriver = spieler.get_fastestlab_tipp(race_id-1, tipprunde_id)[0]
             drivers.update(fdriver)
-            spieler.set_fastestLab_tipps(race_id, fdriver['fdriver'])
+            spieler.set_fastestLab_tipps(race_id, fdriver['fdriver'], tipprunde_id)
         drivers.update({'zeitschranke': True})
 
     else:
@@ -90,31 +138,37 @@ def get_dummy():
 @tippabgabe_bp.route('/save_selection', methods=['POST'])
 def save_selection():
     data = request.get_json()
-    name = data['name']
+    name =current_user.username
     city = data['city'].split(', ')[0].capitalize()
+    tipprunde_id = data['tipprunde_id']
+    saison = app.current_app.config['SAISON']
+
+    if tipprunde_id is None:
+        tipprunde_id = 0
 
     # Quali-Fahrer (1-4), race fahrer (1-10), fastestLab Fahrer auslesen (Standardwert ist ein leerer String, falls nicht übergeben)
     qdrivers = [data.get(f'qdriver{i+1}', '') for i in range(4)]
     rdrivers = [data.get(f'driver{i + 1}', '') for i in range(10)]
     fdriver = data.get(f'fdriver', '')
 
-    race_id = utils.get_raceID(city)
+    race_id = utils.get_raceID(city, saison)
     if not race_id['success']:
         return race_id
     else:
         race_id = race_id['race_id']
 
     spieler = Spieler(name)
-    spieler.set_quali_tipps(race_id, qdrivers)
-    spieler.set_race_tipps(race_id, rdrivers)
-    spieler.set_fastestLab_tipps(race_id, fdriver)
+    spieler.set_quali_tipps(race_id, qdrivers, tipprunde_id)
+    spieler.set_race_tipps(race_id, rdrivers, tipprunde_id)
+    spieler.set_fastestLab_tipps(race_id, fdriver, tipprunde_id)
 
     return jsonify({'success': True})
 
 
 @tippabgabe_bp.route('/races_get_cities', methods=['GET'])
 def get_cities():
-    cities = utils.get_cities()
+    saison = app.current_app.config['SAISON']
+    cities = utils.get_cities(saison)
     rennliste = [f"{name.upper() if details['is_sprint'] else name}, {details['datum']}" for name, details in
                  cities.items()]
     return jsonify(rennliste)

@@ -12,31 +12,68 @@
 
 
     <div class="container">
+
+       <!-- Top-Bar -->
+        <div class="top-bar">
+            <div class="tipprunde-container">
+                Tipprunde:
+                <select id="tipprunde-select" class="tipprunde-select" onchange="location.href=this.value;">
+                    {% if tipprunden %}
+                    {% for t in tipprunden %}
+                    <option value="{{ url_for('home.change_tipprunde', tipprunde_id=t.id) }}"
+                            data-id="{{ t.id }}"
+                            {% if t.id== tipprunde_id %}selected{% endif %}>
+                        {{ t.name }}
+                    </option>
+                    {% endfor %}
+                    {% else %}
+                    <option value="#">None</option>
+                    {% endif %}
+                </select>
+            </div>
+
+            <div class="login-status">
+                {% if current_user.is_authenticated %}
+                Eingeloggt als: {{ current_user.username }}
+                <form action="{{ url_for('auth.logout') }}" method="get" style="display:inline;">
+                    <button type="submit" class="logout-btn">Logout</button>
+                </form>
+                {% else %}
+                <a href="{{ url_for('auth.login') }}">Login</a>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Navigation -->
         <nav>
             <ul>
                 <li><a href="/">Home</a></li>
-                <li class="dropdown" id="tippDropdownLi">
-                    <a href="javascript:void(0);" class="dropbtn" id="tippDropdownToggle">Tippabgabe</a>
-                       <!-- Dropdown-Inhalte -->
-                    <div class="dropdown-content" id="tippDropdownMenu">
+
+                <li class="dropdown">
+                    <a href="javascript:void(0);" class="dropbtn">Tippabgabe</a>
+                    <div class="dropdown-content">
                         <a href="/tippabgabe">Rennen</a>
                         <a href="/sprinttipps">Sprintrennen</a>
                     </div>
                 </li>
-                <li class="dropdown" id="ergDropdownLi">
-                    <a href="javascript:void(0);" class="dropbtn" id="ergDropdownToggle">Tabelle</a>
-                       <!-- Dropdown-Inhalte -->
-                    <div class="dropdown-content" id="ergDropdownMenu">
-                        <a href="/rennergebnis">Einzel-Rennen</a>
-                        <a href="/gesamtergebnis">Gesamt</a>
-                    </div>
-                </li>
 
+                <li><a href="/gesamtergebnis">Tabelle</a></li>
                 <li><a href="/wmStand">WM Stand</a></li>
                 <li><a href="/regeln">Regeln</a></li>
+                <li><a href="/profile">Profil</a></li>
+                {% if current_user.is_authenticated and current_user.is_admin %}
+                <li class="dropdown">
+                    <a href="javascript:void(0);" class="dropbtn">Admin</a>
+                    <div class="dropdown-content">
+                        <a href="/admin/rennergebnisse">🏁 Rennergebnisse</a>
+                        <a href="/admin/users">👤 User verwalten</a>
+                        <a href="/admin/tipprunden">📋 Tipprunden</a>
+                        <a href="/admin/settings">⚙️ Einstellungen</a>
+                    </div>
+                </li>
+                {% endif %}
             </ul>
         </nav>
-
 
         <h1>Formel 1 Tippspiel</h1>
         <img src="{{ url_for('static', filename='Logo_Gans_und_Goessel.jpg') }}" alt="Formel 1 Bild" style="display: block; max-width: 50%; height: auto; margin: 20px auto;">
@@ -46,82 +83,59 @@
 
         <div class="table-wrapper">
 
+            <!-- Qualifying -->
             <h1>Qualifying</h1>
             <table id="qTippTabelle">
                 <thead>
-                    <tr>
-                        <th></th>
-                        <th>Alexander</th>
-                        <th>Christine</th>
-                        <th>Christoph</th>
-                        <th>Jürgen</th>
-                        <th>Klaus</th>
-                        <th>Simon</th>
-                        <th>Dummy_LY</th>
-                        <th>Dummy_Kon</th>
-                        <th>Dummy_WM</th>
-                        <th>Dummy_LR</th>
-                        <th>Ergebnis</th>
-                    </tr>
+                <tr>
+                    <th></th>
+                    {% for user in users %}
+                    <th>{{ user.username }}</th>
+                    {% endfor %}
+                </tr>
                 </thead>
                 <tbody>
 
                 </tbody>
             </table>
 
+            <!-- Rennen -->
             <h1>Rennen</h1>
             <table id="rTippTabelle">
                 <thead>
-                    <tr>
-                        <th></th>
-                        <th>Alexander</th>
-                        <th>Christine</th>
-                        <th>Christoph</th>
-                        <th>Jürgen</th>
-                        <th>Klaus</th>
-                        <th>Simon</th>
-                        <th>Dummy_LY</th>
-                        <th>Dummy_Kon</th>
-                        <th>Dummy_WM</th>
-                        <th>Dummy_LR</th>
-                        <th>Ergebnis</th>
-                    </tr>
+                <tr>
+                    <th></th>
+                    {% for user in users %}
+                    <th>{{ user.username }}</th>
+                    {% endfor %}
+                </tr>
                 </thead>
                 <tbody>
-
                 </tbody>
             </table>
 
+            <!-- Schnellste Runde -->
             <h1>Schnellste Runde</h1>
             <table id="fTippTabelle">
                 <thead>
-                    <tr>
-                        <th></th>
-                        <th>Alexander</th>
-                        <th>Christine</th>
-                        <th>Christoph</th>
-                        <th>Jürgen</th>
-                        <th>Klaus</th>
-                        <th>Simon</th>
-                        <th>Dummy_LY</th>
-                        <th>Dummy_Kon</th>
-                        <th>Dummy_WM</th>
-                        <th>Dummy_LR</th>
-                        <th>Ergebnis</th>
-                    </tr>
+                <tr>
+                    <th></th>
+                    {% for user in users %}
+                    <th>{{ user.username }}</th>
+                    {% endfor %}
+                </tr>
                 </thead>
                 <tbody>
 
                 </tbody>
             </table>
-
         </div>
-
-
-        <button id="downloadButton"> Download als Excel-Datei</button>
-        <script type="module" src="static/mainscript.js"></script>
-
     </div>
 
+    <script type="module">
+        import { initHomePage } from "{{ url_for('static', filename='pages/home.js') }}";
+        initHomePage();
+    </script>
 </body>
+
 </html>

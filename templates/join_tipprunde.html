@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tipprunde beitreten - F1 Tippspiel</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+
+<body data-page-id="join-tipprunde">
+
+    <div class="container">
+        <h1>Formel 1 Tippspiel</h1>
+
+        <!-- Logo -->
+        <img
+            src="{{ url_for('static', filename='Logo_Gans_und_Goessel.jpg') }}"
+            alt="Formel 1 Logo"
+            class="login-logo"
+        >
+
+        <!-- Titel -->
+        <h1 class="login-title">Tipprunde beitreten</h1>
+
+        <!-- Formular -->
+        <form method="post" class="login-form">
+
+            <div class="form-row">
+                <label for="name">Name der Tipprunde</label>
+                <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    placeholder="z. B. Familie"
+                    required
+                >
+            </div>
+
+            <div class="form-row">
+                <label for="password">Passwort der Tipprunde</label>
+                <input
+                    type="password"
+                    id="password"
+                    name="password"
+                    placeholder="Passwort"
+                    required
+                >
+            </div>
+
+            <!-- Beitreten Button -->
+            <button type="submit" class="form-btn">
+                Tipprunde beitreten
+            </button>
+
+            <!-- Zurück-Link -->
+            <a href="{{ url_for('profile.profile') }}" class="form-btn">
+                Zurück
+            </a>
+
+        </form>
+
+        <!-- Flash-Messages -->
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <ul class="flash-messages">
+                    {% for message in messages %}
+                        <li>{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        {% endwith %}
+
+    </div>
+
+</body>
+</html>

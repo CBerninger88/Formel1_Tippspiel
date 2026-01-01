@@ -11,7 +11,7 @@ class Spieler:
         db = get_db()
         cursor = db.cursor()
 
-        cursor.execute('SELECT id FROM users WHERE name = %s', (self.name,))
+        cursor.execute('SELECT id FROM users WHERE username = %s', (self.name,))
         user_result = cursor.fetchone()
         user_id = user_result[0]
         return user_id
@@ -210,7 +210,7 @@ class Spieler:
         return ergebnis, status
 
 
-    def get_sprint_tipps(self, race_id):
+    def get_sprint_tipps(self, race_id, tipprunde_id):
         ergebnis = {}
         db = get_db()
         cursor = db.cursor()
@@ -222,13 +222,13 @@ class Spieler:
             cursor.execute("""
                         SELECT driver1, driver2, driver3, driver4, driver5, driver6, driver7, driver8
                         FROM sprinttipps
-                        WHERE user_id = %s AND race_id = %s
+                        WHERE user_id = %s AND race_id = %s AND tipprunde_id = %s
                         ORDER BY id DESC LIMIT 1
-                        """, (self.user_id, race_id))
+                        """, (self.user_id, race_id, tipprunde_id))
             sresult = cursor.fetchone()
 
             if sresult is None:
-                msg = f'Keine Sprinttipps für {self.name} in der Datenbank'
+                msg = f'Keine Sprinttipps für {self.name} in Tipprunde {tipprunde_id}'
                 return {}, {'success': False, 'message': msg}  # Falls keine Daten vorhanden sind, gib ein leeres Dict zurück
 
             ergebnis.update({f'sdriver{i + 1}': sresult[i] for i in range(len(sresult))})
@@ -238,7 +238,7 @@ class Spieler:
 
         return ergebnis, status
 
-    def get_quali_tipps(self, race_id):
+    def get_quali_tipps(self, race_id, tipprunde_id):
         ergebnis = {}
         db = get_db()
         cursor = db.cursor()
@@ -246,18 +246,19 @@ class Spieler:
         cursor.execute("""
                    SELECT driver1, driver2, driver3, driver4
                    FROM qualitipps
-                   WHERE user_id = %s AND race_id = %s
-                   ORDER BY id DESC LIMIT 1
-               """, (self.user_id, race_id))
+                   WHERE user_id = %s AND race_id = %s AND tipprunde_id = %s
+                   ORDER BY id DESC 
+                   LIMIT 1
+               """, (self.user_id, race_id, tipprunde_id))
         qresult = cursor.fetchone()
         if qresult is None:
-            msg = f'Keine Qualitipps für {self.name} in der Datenbank'
+            msg = f'Keine Qualitipps für {self.name} in Tipprunde {tipprunde_id}'
             return {}, {'success': False, 'message': msg} # Falls keine Daten vorhanden sind, gib ein leeres Dict zurück
         status = {'success': True, 'message': 'Alles ok'}
         return {f'qdriver{i + 1}': driver for i, driver in enumerate(qresult)}, status
 
 
-    def get_race_tipps(self, race_id):
+    def get_race_tipps(self, race_id, tipprunde_id):
         ergebnis = {}
         db = get_db()
         cursor = db.cursor()
@@ -265,19 +266,20 @@ class Spieler:
         cursor.execute("""
                     SELECT driver1, driver2, driver3, driver4, driver5, driver6, driver7, driver8, driver9, driver10
                     FROM racetipps
-                    WHERE user_id = %s AND race_id = %s
-                    ORDER BY id DESC LIMIT 1
-                   """, (self.user_id, race_id))
+                    WHERE user_id = %s AND race_id = %s AND tipprunde_id = %s
+                    ORDER BY id DESC 
+                    LIMIT 1
+                   """, (self.user_id, race_id, tipprunde_id))
         rresult = cursor.fetchone()
         if rresult is None:
-            msg = f'Keine Racetipps für {self.name} in der Datenbank'
+            msg = f'Keine Racetipps für {self.name} in Tipprunde {tipprunde_id}'
             return {}, {'success': False, 'message': msg}
 
         status = {'success': True, 'message': 'Alles ok'}
         return {f'rdriver{i + 1}': driver for i, driver in enumerate(rresult)}, status
 
 
-    def get_fastestlab_tipp(self, race_id):
+    def get_fastestlab_tipp(self, race_id, tipprunde_id):
         ergebnis = {}
         db = get_db()
         cursor = db.cursor()
@@ -285,50 +287,52 @@ class Spieler:
         cursor.execute("""
                     SELECT driver1
                     FROM fastestlab
-                    WHERE user_id = %s AND race_id = %s
+                    WHERE user_id = %s AND race_id = %s AND tipprunde_id = %s
                     ORDER BY id DESC LIMIT 1
-                    """, (self.user_id, race_id))
+                    """, (self.user_id, race_id, tipprunde_id))
         fresult = cursor.fetchone()
 
         if fresult is None:
-            msg = f'Keine FastestLabTipp für {self.name} in der Datenbank'
+            msg = f'Keine FastestLabTipp für {self.name} in Tipprunde {tipprunde_id}'
             return {}, {'success': False, 'message': msg}
 
         status = {'success': True, 'message': 'Alles ok'}
         return {f'fdriver': fresult[0]}, status
 
 
-    def set_quali_tipps(self, race_id, qdrivers):
+    def set_quali_tipps(self, race_id, qdrivers, tipprunde_id):
         db = get_db()
         cursor = db.cursor()
 
         # 3. Daten in QualiTips speichern
         cursor.execute('''
-                 INSERT INTO qualitipps (user_id, race_id, driver1, driver2, driver3, driver4)
-                 VALUES (%s, %s, %s, %s, %s, %s)
-         ''', (self.user_id, race_id, *qdrivers))
+                 INSERT INTO qualitipps (user_id, race_id, driver1, driver2, driver3, driver4, tipprunde_id, created_at)
+                 VALUES (%s, %s, %s, %s, %s, %s, %s, Now())
+         ''', (self.user_id, race_id, *qdrivers, tipprunde_id))
         db.commit()
 
 
-    def set_race_tipps(self, race_id, rdrivers):
+    def set_race_tipps(self, race_id, rdrivers, tipprunde_id):
         db = get_db()
         cursor = db.cursor()
 
         cursor.execute('''
-                        INSERT INTO racetipps (user_id, race_id, driver1, driver2, driver3, driver4, driver5, driver6, driver7, driver8, driver9, driver10 )
-                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                ''', (self.user_id, race_id, *rdrivers))
+                        INSERT INTO racetipps (user_id, race_id, driver1, driver2, driver3, driver4, driver5, driver6, driver7, driver8, driver9, driver10, tipprunde_id, created_at)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, Now())
+                ''', (self.user_id, race_id, *rdrivers, tipprunde_id))
         db.commit()
 
-    def set_fastestLab_tipps(self, race_id, fdriver):
+    def set_fastestLab_tipps(self, race_id, fdriver, tipprunde_id):
         db = get_db()
         cursor = db.cursor()
+
+        driver = fdriver if fdriver else ''
 
         # 3. Daten in FastestLab speichern
         cursor.execute('''
-                           INSERT INTO fastestlab (user_id, race_id, driver1)
-                           VALUES (%s, %s, %s)
-                   ''', (self.user_id, race_id, fdriver))
+                           INSERT INTO fastestlab (user_id, race_id, driver1, tipprunde_id, created_at)
+                           VALUES (%s, %s, %s, %s, Now())
+                   ''', (self.user_id, race_id, driver, tipprunde_id))
         db.commit()
 
     def set_sprint_tipps(self, race_id, sdrivers):

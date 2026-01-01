@@ -10,28 +10,54 @@
 </head>
 <body>
 <div class="container">
+    <!-- Top-Bar -->
+    <div class="top-bar">
+        <div class="tipprunde-container">
+            Tipprunde:
+            <select id="tipprunde-select" class="tipprunde-select" onchange="location.href=this.value;">
+                {% if tipprunden %}
+                {% for t in tipprunden %}
+                <option value="{{ url_for('home.change_tipprunde', tipprunde_id=t.id) }}"
+                        data-id="{{ t.id }}"
+                        {% if t.id== tipprunde_id %}selected{% endif %}>
+                    {{ t.name }}
+                </option>
+                {% endfor %}
+                {% else %}
+                <option value="#">None</option>
+                {% endif %}
+            </select>
+        </div>
+
+        <div class="login-status">
+            {% if current_user.is_authenticated %}
+            Eingeloggt als: {{ current_user.username }}
+            <form action="{{ url_for('auth.logout') }}" method="get" style="display:inline;">
+                <button type="submit" class="logout-btn">Logout</button>
+            </form>
+            {% else %}
+            <a href="{{ url_for('auth.login') }}">Login</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Navigation -->
     <nav>
         <ul>
             <li><a href="/">Home</a></li>
-            <li class="dropdown" id="tippDropdownLi">
-                <a href="javascript:void(0);" class="dropbtn" id="tippDropdownToggle">Tippabgabe</a>
-                <!-- Dropdown-Inhalte -->
-                <div class="dropdown-content" id="tippDropdownMenu">
+
+            <li class="dropdown">
+                <a href="javascript:void(0);" class="dropbtn">Tippabgabe</a>
+                <div class="dropdown-content">
                     <a href="/tippabgabe">Rennen</a>
                     <a href="/sprinttipps">Sprintrennen</a>
                 </div>
             </li>
-            <li class="dropdown" id="ergDropdownLi">
-                <a href="javascript:void(0);" class="dropbtn" id="ergDropdownToggle">Tabelle</a>
-                <!-- Dropdown-Inhalte -->
-                <div class="dropdown-content" id="ergDropdownMenu">
-                    <a href="/rennergebnis">Einzel-Rennen</a>
-                    <a href="/gesamtergebnis">Gesamt</a>
-                </div>
-            </li>
 
+            <li><a href="/gesamtergebnis">Tabelle</a></li>
             <li><a href="/wmStand">WM Stand</a></li>
             <li><a href="/regeln">Regeln</a></li>
+            <li><a href="/profile">Profil</a></li>
         </ul>
     </nav>
 

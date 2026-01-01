@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.2/xlsx.full.min.js"></script>
+</head>
+
+<body data-page-id="login">
+
+    <div class="container">
+
+
+        <h1>Formel 1 Tippspiel</h1>
+        <img src="{{ url_for('static', filename='Logo_Gans_und_Goessel.jpg') }}" alt="Formel 1 Bild" style="display: block; max-width: 50%; height: auto; margin: 20px auto;">
+
+        <form method="post">
+        <div class="form-row">
+            <label for="username">Benutzername</label>
+            <input type="text" id="username" name="username">
+        </div>
+
+        <div class="form-row">
+            <label for="password">Passwort</label>
+            <input type="password" id="password" name="password">
+        </div>
+
+        <button type="submit" class="register-btn">Login</button>
+
+        <a href="{{ url_for('auth.register') }}" class="register-btn">Registrieren</a>
+    </form>
+
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <ul>
+                    {% for message in messages %}
+                        <li>{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        {% endwith %}
+    </div>
+</body>
+
