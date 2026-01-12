@@ -1,7 +1,7 @@
 import psycopg2
 from psycopg2.extras import RealDictCursor
-from flask import Blueprint, render_template, request, jsonify, session
-from flask_login import current_user
+from flask import Blueprint, render_template, request, jsonify, session, app
+from flask_login import login_required, current_user
 
 import utils
 from city import City
@@ -15,6 +15,17 @@ wmStand_bp = Blueprint('wmStand', __name__)
 def wmstand():
     db = get_db()
     cursor = db.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+    cursor.execute("""
+        SELECT revent.city
+        FROM races r
+        JOIN race_events revent ON r.race_event_id = revent.id
+        JOIN rennergebnisse re ON r.id = re.race_id
+        ORDER BY re.id DESC
+        LIMIT 1;
+    """)
+
+    rennen = cursor.fetchone()
 
     # 🔹 Tipprunden des aktuellen Users
     cursor.execute("""
@@ -32,7 +43,8 @@ def wmstand():
             "wmStand.html",
             tipprunden=[],
             users=[current_user],
-            tipprunde_id=None
+            tipprunde_id=None,
+            rennen = rennen
         )
 
     # 🔹 Fallback: erste Tipprunde
@@ -49,14 +61,18 @@ def wmstand():
     users = cursor.fetchall()
 
     return render_template("wmStand.html",
-                           tipprunden=tipprunden,
-                           users=users,
-                           tipprunde_id=tipprunde_id
+                            tipprunden=tipprunden,
+                            users=users,
+                            tipprunde_id=tipprunde_id,
+                            rennen = rennen
                            )
 
+
 @wmStand_bp.route('/wmStand_get_cities', methods=['GET'])
+@login_required
 def get_cities():
-    cities = utils.get_cities()
+    saison = app.current_app.config['SAISON']
+    cities = utils.get_cities(saison)
     rennliste = [f"{name.upper() if details['is_sprint'] else name}, {details['datum']}" for name, details in
                  cities.items()]
     return jsonify(rennliste)
@@ -69,30 +85,41 @@ def get_drivers():
 @wmStand_bp.route('/get_wm_stand')
 def get_wm_stand():
 
-    cityName = request.args.get('city').split(', ')[0].capitalize()
+    city = request.args.get('rennen')
+    saison = app.current_app.config['SAISON']
 
-    city = City(cityName)
+    race_id = utils.get_raceID(city, saison)
+    if not race_id['success']:
+        return {}
+    else:
+        race_id = race_id['race_id']
+
     ergebnis = {}
-    wmdrivers, success = city.get_wm_stand()
-    ergebnis.update(wmdrivers)
-    ergebnis.update(success)
+    drivers, success = utils.get_wm_stand(race_id, saison)
+    #ergebnis.update(wmdrivers)
+    #ergebnis.update(success)
 
-    return jsonify(ergebnis)
-
-
-
-@wmStand_bp.route('/save_wm_stand', methods=['POST'])
-def save_wm_stand():
-
-    data = request.get_json()
-    cityName = data['city'].split(', ')[0].capitalize()
-
-    # WM Stand auslesen (Standardwert ist ein leerer String, falls nicht übergeben)
-    wmStand = [data.get(f'wmdriver{i + 1}', '') for i in range(20)]
-
-    city = City(cityName)
-
-    city.set_wm_stand(wmStand)
+    return jsonify({
+        "success": True,
+        "message": "Ok",
+        "wm_stand": drivers
+    })
 
 
-    return jsonify({'success': True})
+
+@wmStand_bp.route('/get_team_stand', methods=['GET'])
+def get_team_stand():
+
+    city = request.args.get('rennen')
+    saison = app.current_app.config['SAISON']
+
+    race = utils.get_raceID(city, saison)
+    if not race['success']:
+        return jsonify({"success": False})
+
+    team_wm = utils.get_team_stand(race['race_id'], saison)
+
+    return jsonify({
+        "success": True,
+        "team_wm": team_wm
+    })

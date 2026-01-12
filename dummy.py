@@ -4,7 +4,7 @@ from db import get_db
 from spieler import Spieler
 
 
-class Dummy(Spieler):
+class Dummytipps(Spieler):
     def __init__(self, name):
         """Konstruktor, der den Namen des Spielers speichert."""
         super().__init__(name)
@@ -198,3 +198,9 @@ class Dummy(Spieler):
                         status['message'] = 'Kein passender Fahrer für Fallback gefunden'
 
         return ergebnis, status
+
+
+    def set_quali_tipps(self, race_id, qdrivers, tipprunde_id):
+
+        test = 4
+        return test

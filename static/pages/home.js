@@ -161,7 +161,7 @@ export function initHomePage(){
                             tr.appendChild(td);
                         }
 
-                        td.textContent = data[name]?.[`fdriver`] || '❓';
+                        td.textContent = data[name]?.[`fdriver1`] || '❓';
                     });
 
                     const tableWrapper = document.querySelector(".table-wrapper");

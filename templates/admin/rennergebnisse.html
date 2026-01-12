@@ -9,7 +9,7 @@
 
 </head>
 
-<body data-page-id="wmStand">
+<body data-page-id="rennergebnis">
     <div class="container">
           <!-- Top-Bar -->
         <div class="top-bar">
@@ -72,119 +72,149 @@
             {% if current_user.is_authenticated and current_user.is_admin %}
             <div class="dropdown-content" id="dropdown-admin">
                 <a href="/admin/rennergebnisse">🏁 Rennergebnisse</a>
-                <a href="/admin/users">👤 User verwalten</a>
+                <a href="/admin/sprintergebnisse">👤 Sprintergebniss</a>
                 <a href="/admin/tipprunden">📋 Tipprunden</a>
                 <a href="/admin/settings">⚙️ Einstellungen</a>
             </div>
             {% endif %}
         </div>
 
-        <h1>WM Stand VOR folgendem Rennen</h1>
-
         <label for="city">Rennen:</label>
         <select id="city" class="driverselect"></select>
 
+        <h1>Qualifikation</h1>
+
         <div class="form-group">
-            <label for="wmdriver1">1. Platz:</label>
-            <select id="wmdriver1" class="driverselect"></select>
+            <label for="qdriver1">1. Platz:</label>
+            <select id="qdriver1" class="driver-select"></select>
         </div>
 
         <div class="form-group">
-            <label for="wmdriver2">2. Platz:</label>
-            <select id="wmdriver2" class="driverselect"></select>
+            <label for="qdriver2">2. Platz:</label>
+            <select id="qdriver2" class="driver-select"></select>
         </div>
 
         <div class="form-group">
-            <label for="wmdriver3">3. Platz:</label>
-            <select id="wmdriver3" class="driverselect"></select>
+            <label for="qdriver3">3. Platz:</label>
+            <select id="qdriver3" class="driver-select"></select>
         </div>
 
         <div class="form-group">
-            <label for="wmdriver4">4. Platz:</label>
-            <select id="wmdriver4" class="driverselect"></select>
+            <label for="qdriver4">4. Platz:</label>
+            <select id="qdriver4" class="driver-select"></select>
+        </div>
+
+        <h1>Rennergebnis</h1>
+
+        <div class="form-group">
+            <label for="driver1">1. Platz:</label>
+            <select id="driver1" class="driverselect"></select>
         </div>
 
         <div class="form-group">
-            <label for="wmdriver5">5. Platz:</label>
-            <select id="wmdriver5" class="driverselect"></select>
+            <label for="driver2">2. Platz:</label>
+            <select id="driver2" class="driverselect"></select>
         </div>
 
         <div class="form-group">
-            <label for="wmdriver6">6. Platz:</label>
-            <select id="wmdriver6" class="driverselect"></select>
+            <label for="driver3">3. Platz:</label>
+            <select id="driver3" class="driverselect"></select>
         </div>
 
         <div class="form-group">
-            <label for="wmdriver7">7. Platz:</label>
-            <select id="wmdriver7" class="driverselect"></select>
+            <label for="driver4">4. Platz:</label>
+            <select id="driver4" class="driverselect"></select>
         </div>
 
         <div class="form-group">
-            <label for="wmdriver8">8. Platz:</label>
-            <select id="wmdriver8" class="driverselect"></select>
+            <label for="driver5">5. Platz:</label>
+            <select id="driver5" class="driverselect"></select>
         </div>
 
         <div class="form-group">
-            <label for="wmdriver9">9. Platz:</label>
-            <select id="wmdriver9" class="driverselect"></select>
+            <label for="driver6">6. Platz:</label>
+            <select id="driver6" class="driverselect"></select>
         </div>
 
         <div class="form-group">
-            <label for="wmdriver10">10. Platz:</label>
-            <select id="wmdriver10" class="driverselect"></select>
+            <label for="driver7">7. Platz:</label>
+            <select id="driver7" class="driverselect"></select>
         </div>
 
         <div class="form-group">
-            <label for="wmdriver11">11. Platz:</label>
-            <select id="wmdriver11" class="driverselect"></select>
+            <label for="driver8">8. Platz:</label>
+            <select id="driver8" class="driverselect"></select>
         </div>
 
         <div class="form-group">
-            <label for="wmdriver12">12. Platz:</label>
-            <select id="wmdriver12" class="driverselect"></select>
+            <label for="driver9">9. Platz:</label>
+            <select id="driver9" class="driverselect"></select>
         </div>
 
         <div class="form-group">
-            <label for="wmdriver13">13. Platz:</label>
-            <select id="wmdriver13" class="driverselect"></select>
+            <label for="driver10">10. Platz:</label>
+            <select id="driver10" class="driverselect"></select>
         </div>
 
         <div class="form-group">
-            <label for="wmdriver14">14. Platz:</label>
-            <select id="wmdriver14" class="driverselect"></select>
+            <label for="driver11">11. Platz:</label>
+            <select id="driver11" class="driverselect"></select>
         </div>
 
         <div class="form-group">
-            <label for="wmdriver15">15. Platz:</label>
-            <select id="wmdriver15" class="driverselect"></select>
+            <label for="driver12">12. Platz:</label>
+            <select id="driver12" class="driverselect"></select>
         </div>
 
         <div class="form-group">
-            <label for="wmdriver16">16. Platz:</label>
-            <select id="wmdriver16" class="driverselect"></select>
+            <label for="driver13">13. Platz:</label>
+            <select id="driver13" class="driverselect"></select>
         </div>
 
         <div class="form-group">
-            <label for="wmdriver17">17. Platz:</label>
-            <select id="wmdriver17" class="driverselect"></select>
+            <label for="driver14">14. Platz:</label>
+            <select id="driver14" class="driverselect"></select>
         </div>
 
         <div class="form-group">
-            <label for="wmdriver18">18. Platz:</label>
-            <select id="wmdriver18" class="driverselect"></select>
+            <label for="driver15">15. Platz:</label>
+            <select id="driver15" class="driverselect"></select>
         </div>
 
         <div class="form-group">
-            <label for="wmdriver19">19. Platz:</label>
-            <select id="wmdriver19" class="driverselect"></select>
+            <label for="driver16">16. Platz:</label>
+            <select id="driver16" class="driverselect"></select>
         </div>
 
         <div class="form-group">
-            <label for="wmdriver20">20. Platz:</label>
-            <select id="wmdriver20" class="driverselect"></select>
+            <label for="driver17">17. Platz:</label>
+            <select id="driver17" class="driverselect"></select>
         </div>
 
-        <button id="wmStand">WM Stand speichern</button>
+        <div class="form-group">
+            <label for="driver18">18. Platz:</label>
+            <select id="driver18" class="driverselect"></select>
+        </div>
+
+        <div class="form-group">
+            <label for="driver19">19. Platz:</label>
+            <select id="driver19" class="driverselect"></select>
+        </div>
+
+        <div class="form-group">
+            <label for="driver20">20. Platz:</label>
+            <select id="driver20" class="driverselect"></select>
+        </div>
+
+
+        <h1>Schnellste Runde</h1>
+
+        <div class="form-group">
+            <label for="fdriver">Schnellste Runde:</label>
+            <select id="fdriver" class="driver-select"></select>
+        </div>
+
+        <button id="rennergebnis">Rennergebnis speichern</button>
 
 
     </div>

@@ -13,7 +13,6 @@ def create():
         name = request.form["name"]
         join_password = request.form["join_password"]
 
-        # Sicherheit: Backend-validierung
         if not name or not join_password:
             flash("Name und Passwort sind erforderlich.")
             return redirect(url_for("tipprunden.create"))
@@ -23,8 +22,8 @@ def create():
         conn = get_db()
         cur = conn.cursor()
 
-        # 1️⃣ Tipprunde anlegen
         try:
+            # 1️⃣ Tipprunde anlegen
             cur.execute(
                 """
                 INSERT INTO tipprunden (name, join_password_hash, created_by, created_at)
@@ -37,14 +36,36 @@ def create():
             tipprunde_id = cur.fetchone()[0]
 
             # 2️⃣ Ersteller als Admin hinzufügen
-            cur.execute("""
+            cur.execute(
+                """
                 INSERT INTO tipprunden_user (user_id, tipprunde_id, role)
                 VALUES (%s, %s, 'admin')
-            """, (current_user.id, tipprunde_id))
+                """,
+                (current_user.id, tipprunde_id)
+            )
+
+            # 3️⃣ Dummy-User IDs laden
+            cur.execute(
+                """
+                SELECT id
+                FROM users
+                WHERE username IN ('Dummy_WM', 'Dummy_LR', 'Dummy_LY', 'Dummy_Kon','Ergebnis')
+                """
+            )
+            dummy_user_ids = [row[0] for row in cur.fetchall()]
+
+            # 4️⃣ Dummy-User als Member hinzufügen
+            cur.executemany(
+                """
+                INSERT INTO tipprunden_user (user_id, tipprunde_id, role)
+                VALUES (%s, %s, 'member')
+                """,
+                [(user_id, tipprunde_id) for user_id in dummy_user_ids]
+            )
 
             conn.commit()
 
-            flash("Tipprunde erfolgreich erstellt!")
+            flash("✅ Tipprunde erfolgreich erstellt!")
             return redirect(url_for("tipprunden.create"))
 
         except UniqueViolation:
@@ -55,6 +76,7 @@ def create():
             cur.close()
 
     return render_template("create_tipprunde.html")
+
 
 @tipprunden_bp.route("/join", methods=["GET", "POST"])
 @login_required

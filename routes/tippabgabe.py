@@ -6,7 +6,7 @@ from flask import Blueprint, render_template, request, jsonify, session, app
 
 import utils
 from db import get_db
-from dummy import Dummy
+from dummy import Dummytipps
 from spieler import Spieler
 from datetime import date
 from datetime import datetime
@@ -118,7 +118,7 @@ def get_dummy():
         return jsonify({'drivers': {}, 'status': {'success': False, 'message': 'Race ID nicht gefunden'}})
 
     race_id = race_data['race_id']
-    dummy = Dummy(name)
+    dummy = Dummytipps(name)
 
     # Fahrer-Tipps abrufen
     qualitipps, qstatus = dummy.get_quali_tipps(race_id)

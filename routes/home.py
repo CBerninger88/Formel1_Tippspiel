@@ -3,6 +3,7 @@ from psycopg2.extras import RealDictCursor
 from flask import Blueprint, render_template, request, jsonify, session, url_for, redirect, app
 from flask_login import login_required, current_user
 from db import get_db
+from models.dummy import Dummytipps
 
 import utils
 from spieler import Spieler
@@ -121,7 +122,7 @@ def get_tipps():
 
 
     # Get Sprint Tipps if city has Sprintrennen
-    is_sprint = utils.is_sprint(city, saison)
+    is_sprint = utils.is_sprint(race_id)
     if is_sprint:
 
         names = utils.get_tipper(race_id, tipprunde_id, 'sprinttipps')
@@ -136,6 +137,26 @@ def get_tipps():
 
     else:
         ergebnis.update({f'sprint': is_sprint})
+
+
+    #### Gett all dummies ####
+    dummies = ['Dummy_Kon', 'Dummy_LR', 'Dummy_LY', 'Dummy_WM']
+    dummyservice = Dummytipps()
+    for dummy in dummies:
+        dummy_id = utils.get_user_id(dummy)['user_id']
+        qualitipps = dummyservice.get_tipps_for_frontend(dummy_id, race_id, saison, 'quali')
+        if dummy not in ergebnis:
+            ergebnis[dummy] = {}
+        ergebnis[dummy].update(qualitipps)
+        racetipps = dummyservice.get_tipps_for_frontend(dummy_id, race_id, saison, 'race')
+        if dummy not in ergebnis:
+            ergebnis[dummy] = {}
+        ergebnis[dummy].update(racetipps)
+        fastestlap = dummyservice.get_tipps_for_frontend(dummy_id, race_id, saison, 'fastest')
+        if dummy not in ergebnis:
+            ergebnis[dummy] = {}
+        ergebnis[dummy].update(fastestlap)
+
 
     return jsonify(ergebnis)
 

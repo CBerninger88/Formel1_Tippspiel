@@ -4,24 +4,11 @@ export function initTippabgabePage(){
     console.log('Tippabgabe- Seite Initialisierung');
 
 
-    //const nameSelect = document.getElementById('name');
     const citySelect = document.getElementById('city');
     const qdriverSelects = Array.from(document.querySelectorAll('[id^="qdriver"]'));
     const driverSelects = Array.from(document.querySelectorAll('[id^="driver"]'));
     const fdriverSelect = document.getElementById('fdriver');
     const saveButton = document.getElementById('save');
-
-    // 1. Dynamische Namen und Städte
-    /*
-    fetch('/get_users')
-        .then(response => response.json())
-        .then(names => {
-            populateDropdowns([nameSelect], names, 'Name auswählen');
-        })
-        .catch(error => {
-            console.error('Fehler beim Laden der Namen:', error);
-        });
-    */
 
     fetch('/races_get_cities')
         .then(response => response.json())

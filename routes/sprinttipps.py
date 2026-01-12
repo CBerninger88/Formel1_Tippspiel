@@ -1,6 +1,6 @@
 import psycopg2
 from psycopg2.extras import RealDictCursor
-from flask import Blueprint, render_template, request, jsonify, session
+from flask import Blueprint, render_template, request, jsonify, session, app
 from flask_login import current_user
 
 import utils
@@ -98,7 +98,8 @@ def save_sprinttipps():
 
 @sprinttipps_bp.route('/sprint_get_cities', methods=['GET'])
 def get_cities():
-    return utils.get_sprintCities()
+    saison = app.current_app.config['SAISON']
+    return utils.get_sprintCities(saison)
 
 @sprinttipps_bp.route('/get_drivers', methods=['GET'])
 def get_drivers():

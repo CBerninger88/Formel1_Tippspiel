@@ -297,7 +297,7 @@ class Spieler:
             return {}, {'success': False, 'message': msg}
 
         status = {'success': True, 'message': 'Alles ok'}
-        return {f'fdriver': fresult[0]}, status
+        return {f'fdriver1': fresult[0]}, status
 
 
     def set_quali_tipps(self, race_id, qdrivers, tipprunde_id):

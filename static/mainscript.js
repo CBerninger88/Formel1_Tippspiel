@@ -33,11 +33,19 @@ document.addEventListener('DOMContentLoaded', function() {
             import('./pages/rennergebnis.js').then(module => {
                 module.initRennergebnisPage();
             });
+            break;
+
+        case 'sprintergebnis':
+            import('./pages/sprintergebnis.js').then(module => {
+                module.initSprintergebnisPage();
+            });
+            break;
 
         case 'gesamtergebnis':
-        import('./pages/gesamtergebnis.js').then(module => {
-            module.initGesamtergebnisPage();
-        });
+            import('./pages/gesamtergebnis.js').then(module => {
+                module.initGesamtergebnisPage();
+            });
+            break;
 
         default:
             console.log('Keine spezielle Initialisierung erforderlich');
