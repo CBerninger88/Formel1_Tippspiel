@@ -40,14 +40,7 @@ def index(tipprunde_id=None):
     tipprunde_id = session.get('tipprunde_id') or tipprunden[0]['id']
 
      # 🔹 User der aktiven Tipprunde
-    cursor.execute("""
-        SELECT u.id, u.username
-        FROM users u
-        JOIN tipprunden_user tu ON tu.user_id = u.id
-        WHERE tu.tipprunde_id = %s
-        ORDER BY u.username
-    """, (tipprunde_id,))
-    users = cursor.fetchall()
+    users = utils.get_users_in_tipprunde(tipprunde_id)
 
     return render_template("home.html",
             tipprunden=tipprunden,
@@ -84,7 +77,7 @@ def get_tipps():
         ergebnis[name].update(fastestLabtipp)
 
 
-        is_sprint = utils.is_sprint(city, saison)
+        is_sprint = utils.is_sprint(race_id)
         if is_sprint:
             sprinttipps = spieler.get_sprint_tipps(race_id, tipprunde_id)[0]
             ergebnis[name].update(sprinttipps)
@@ -138,8 +131,9 @@ def get_tipps():
     else:
         ergebnis.update({f'sprint': is_sprint})
 
-
+    ##########################
     #### Gett all dummies ####
+    ##########################
     dummies = ['Dummy_Kon', 'Dummy_LR', 'Dummy_LY', 'Dummy_WM']
     dummyservice = Dummytipps()
     for dummy in dummies:
@@ -157,6 +151,28 @@ def get_tipps():
             ergebnis[dummy] = {}
         ergebnis[dummy].update(fastestlap)
 
+        if is_sprint:
+            sprinttipps = dummyservice.get_tipps_for_frontend(dummy_id, race_id, saison, 'sprint')
+            if dummy not in ergebnis:
+                ergebnis[dummy] = {}
+            ergebnis[dummy].update(sprinttipps)
+
+    ######################
+    ### Get Ergebnis #####
+    ######################
+    qualiergebnis,_ = utils.get_qualiergebnis(race_id, saison)
+    raceergebnis,_ = utils.get_rennergebnis(race_id, saison)
+    fastestlapergebnis,_ = utils.get_fastestlap_ergebnis(race_id, saison)
+    if 'Ergebnis' not in ergebnis:
+        ergebnis['Ergebnis'] = {}
+    ergebnis['Ergebnis'].update(qualiergebnis)
+    ergebnis['Ergebnis'].update(raceergebnis)
+    ergebnis['Ergebnis'].update(fastestlapergebnis)
+    if is_sprint:
+        sprintergebnis,_ = utils.get_sprintergebnis(race_id, saison)
+        ergebnis['Ergebnis'].update(sprintergebnis)
+
+
 
     return jsonify(ergebnis)
 
@@ -173,17 +189,8 @@ def get_users():
     tipprunde_id = request.args.get('tipprunde_id')
     if tipprunde_id is None:
         return jsonify([current_user.username])
-    db = get_db()
-    cursor = db.cursor()
-    cursor.execute("""
-            SELECT u.username
-            FROM tipprunden_user tu
-            JOIN users u ON tu.user_id = u.id
-            WHERE tu.tipprunde_id = %s
-            ORDER BY u.username
-        """, (tipprunde_id,))
-    result = cursor.fetchall()
-    usernames = [row[0] for row in result]
+    users_dict = utils.get_users_in_tipprunde(tipprunde_id)
+    usernames = [entry['username'] for entry in users_dict]
     return jsonify(usernames)
 
 

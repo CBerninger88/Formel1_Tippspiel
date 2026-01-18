@@ -67,14 +67,28 @@ def get_drivers():
     drivers = [row[0] for row in result]
     return drivers
 
-def get_users():
+def get_users_in_tipprunde(tipprunde_id):
     db = get_db()
-    cursor = db.cursor()
-    cursor.execute("SELECT username FROM users ORDER BY id ASC;")
-    result = cursor.fetchall()
+    cursor = db.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    # 🔹 User der aktiven Tipprunde
+    cursor.execute("""
+           SELECT u.id, u.username
+           FROM users u
+           JOIN tipprunden_user tu ON tu.user_id = u.id
+           WHERE tu.tipprunde_id = %s
+           ORDER BY u.username
+       """, (tipprunde_id,))
+    users = cursor.fetchall()
 
-    # Liste der Städte extrahieren
-    users = [row[0] for row in result]
+    users = sorted(
+        users,
+        key=lambda u: (
+            2 if u["username"] == "Ergebnis"
+            else 1 if u["username"].startswith("Dummy_")
+            else 0,
+            u["username"].lower()
+        )
+    )
 
     return users
 
@@ -451,7 +465,7 @@ def set_dummies(race_id, saison, qdrivers, rdrivers, fdriver):
     else:
         return
 
-    sprint = is_sprint(race_id)
+    sprint = is_sprint(race_id+1)
 
 
     ####### Dummy_LR #####
@@ -514,7 +528,7 @@ def set_dummies(race_id, saison, qdrivers, rdrivers, fdriver):
     ##### Dummy_LY #####
     dummy_id = get_user_id('Dummy_LY')['user_id']
     saison_ly = saison - 1
-    city_name = get_cityName(race_id)
+    city_name = get_cityName(race_id_new)
     race_id_ly = get_raceID(city_name['cityName'], saison_ly)
 
     if race_id_ly['success']:
@@ -544,4 +558,70 @@ def set_dummies(race_id, saison, qdrivers, rdrivers, fdriver):
         if sprint:
             dummy_service.save_tipps(dummy_id, race_id_new, saison, top10_drivers[0:8], 'sprint')
 
+
+def set_zusatztipp(zusatz_data: dict):
+    """
+    Fügt einen Eintrag in die Tabelle 'zusatztipps' ein.
+
+    :param zusatz_data: Dictionary mit Keys = Spaltennamen in 'zusatztipps'.
+                        z.B. {'wmdriver1': 'C. Leclerc', 'sdwm': 1, 'tipprunde_id': 15, ...}
+    """
+    db = get_db()
+    cursor = db.cursor()
+
+    # Konvertiere leere Strings für INT-Spalten zu None
+    for key in ['sdwm', 'anzahlsieger']:
+        if key in zusatz_data and zusatz_data[key] == '':
+            zusatz_data[key] = None
+        elif key in zusatz_data and zusatz_data[key] is not None:
+            zusatz_data[key] = int(zusatz_data[key])
+
+    # Spalten und Platzhalter für SQL vorbereiten
+    columns = list(zusatz_data.keys())  # z.B. ['wmdriver1', 'wmdriver2', ..., 'tipprunde_id', 'user_id', 'saison']
+    placeholders = ', '.join(['%s'] * len(columns))
+    sql = f"INSERT INTO zusatztipps ({', '.join(columns)}) VALUES ({placeholders})"
+
+    # Werte als Tuple
+    values = [zusatz_data[col] for col in columns]
+
+    # Ausführen und commit
+    cursor.execute(sql, values)
+    db.commit()
+
+
+def get_zusatztipps(user_id, tipprunde_id, saison):
+    """
+    Liefert die aktuellsten Zusatztipps eines Users für eine bestimmte Tipprunde und Saison
+    als Dictionary mit Spaltennamen als Keys.
+    """
+    db = get_db()
+    cursor = db.cursor()
+
+    # Alle Spalten außer id auswählen
+    columns = [
+        'wmdriver1', 'wmdriver2', 'wmdriver3',
+        'pptrophydriver', 'flawarddriver',
+        'sdwm', 'anzahlsieger',
+        'team1', 'team2', 'team3', 'team4', 'team5',
+        'team6', 'team7', 'team8', 'team9', 'team10', 'team11'
+    ]
+
+    sql = f"""
+        SELECT {', '.join(columns)}
+        FROM zusatztipps
+        WHERE user_id = %s
+          AND tipprunde_id = %s
+          AND saison = %s
+        ORDER BY id DESC
+        LIMIT 1
+    """
+
+    cursor.execute(sql, (user_id, tipprunde_id, saison))
+    row = cursor.fetchone()
+
+    if row:
+        # Als Dictionary zurückgeben
+        return dict(zip(columns, row))
+    else:
+        return None  # kein Tipp gefunden
 

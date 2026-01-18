@@ -29,7 +29,7 @@ class Dummytipps:
         if tipp_type not in self.table_map:
             raise ValueError(f"Unknown tip type: {tipp_type}")
 
-        table, max_drivers = self.table_map[tipp_type]
+        table, max_drivers, _ = self.table_map[tipp_type]
         placeholders = ", ".join([f"driver{i+1}" for i in range(max_drivers)])
         #values = [tipps.get(f"driver{i+1}") for i in range(max_drivers)]
 

@@ -5,8 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>F1 Driver Selection</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.2/xlsx.full.min.js"></script>
+    <script src="/static/modules/xlsx.full.min.js"></script>
 </head>
 <body data-page-id="home">
 
@@ -70,6 +69,7 @@
             <div class="dropdown-content" id="dropdown-tippabgabe">
                 <a href="/tippabgabe">Rennen</a>
                 <a href="/sprinttipps">Sprintrennen</a>
+                <a href="/zusatztipps">Zusatztipps</a>
             </div>
             {% if current_user.is_authenticated and current_user.is_admin %}
             <div class="dropdown-content" id="dropdown-admin">
@@ -137,7 +137,6 @@
             </table>
         </div>
         <button id="downloadButton"> Download als Excel-Datei</button>
-        <script type="module" src="static/mainscript.js"></script>
     </div>
 
     <script type="module">

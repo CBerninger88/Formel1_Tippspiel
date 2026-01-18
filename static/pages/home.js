@@ -4,19 +4,26 @@ export function initHomePage(){
     const citySelect = document.getElementById('citySelect');
     const downloadButton = document.getElementById('downloadButton');
 
+    downloadButton.addEventListener('click', downloadTabelle);
+
     fetch('/get_cities')
         .then(response => response.json())
         .then(cities => {
             populateDropdowns([citySelect], cities, 'Stadt auswählen');
+            // ✅ Listener NACH dem Befüllen setzen
+            citySelect.addEventListener('change', constructTabelle);
+
+            // ✅ Initialer Aufruf
+            constructTabelle();
         })
         .catch(error => {
             console.error('Fehler beim Laden der Städte:', error);
         });
 
-    citySelect.addEventListener('change', constructTabelle)
+    //citySelect.addEventListener('change', constructTabelle)
     // downloadButton.addEventListener('click', downloadTabelle)
     // Trigger change event on page load to populate the table with the default city
-    citySelect.dispatchEvent(new Event('change'));
+    //citySelect.dispatchEvent(new Event('change'));
 
     function downloadTabelle() {
         const city = citySelect.value ? citySelect.value.split(', ')[0] : 'Unbekannt';

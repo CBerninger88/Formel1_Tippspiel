@@ -17,6 +17,7 @@ from routes.auth import auth_bp
 from routes.tipprunden import tipprunden_bp
 from routes.profile import profile_bp
 from routes.admin import admin_bp
+from routes.zusatztipps import zusatztipps_bp
 from db import get_db, init_db, close_connection
 from models.user import User
 import os
@@ -53,6 +54,7 @@ app.register_blueprint(auth_bp)
 app.register_blueprint(tipprunden_bp)
 app.register_blueprint(profile_bp)
 app.register_blueprint(admin_bp)
+app.register_blueprint(zusatztipps_bp)
 
 # Schließe die Datenbankverbindung nach jeder Anfrage
 app.teardown_appcontext(close_connection)

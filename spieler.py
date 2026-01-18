@@ -335,13 +335,13 @@ class Spieler:
                    ''', (self.user_id, race_id, driver, tipprunde_id))
         db.commit()
 
-    def set_sprint_tipps(self, race_id, sdrivers):
+    def set_sprint_tipps(self, race_id, sdrivers, tipprunde_id):
         db = get_db()
         cursor = db.cursor()
 
-        # 3. Daten in QualiTips speichern
+        # 3. Daten in SprintTipps speichern
         cursor.execute('''
-                    INSERT INTO sprinttipps (user_id, race_id, driver1, driver2, driver3, driver4, driver5, driver6, driver7, driver8)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-            ''', (self.user_id, race_id, *sdrivers))
+                    INSERT INTO sprinttipps (user_id, race_id, driver1, driver2, driver3, driver4, driver5, driver6, driver7, driver8, tipprunde_id, created_at)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s,%s,NOW())
+            ''', (self.user_id, race_id, *sdrivers, tipprunde_id))
         db.commit()

@@ -45,14 +45,7 @@ def tippabgabe():
     tipprunde_id = session.get('tipprunde_id') or tipprunden[0]['id']
 
     # 🔹 User der aktiven Tipprunde
-    cursor.execute("""
-            SELECT u.id, u.username
-            FROM users u
-            JOIN tipprunden_user tu ON tu.user_id = u.id
-            WHERE tu.tipprunde_id = %s
-            ORDER BY u.username
-        """, (tipprunde_id,))
-    users = cursor.fetchall()
+    users = utils.get_users_in_tipprunde(tipprunde_id)
 
     return render_template("tippabgabe.html",
                            tipprunden=tipprunden,

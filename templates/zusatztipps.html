@@ -8,10 +8,9 @@
         <script src="{{ url_for('static', filename='mainscript.js') }}"></script>
 
 </head>
-
-<body data-page-id="wmStand">
+<body data-page-id="zusatztipps">
     <div class="container">
-         <!-- Top-Bar -->
+        <!-- Top-Bar -->
         <div class="top-bar">
             <div class="tipprunde-container">
                 Tipprunde:
@@ -80,47 +79,117 @@
             {% endif %}
         </div>
 
+        <h1>Zusatztipps</h1>
 
-        <h1>Formel 1 Fahrerwertung</h1>
+        <h3>WM Stand</h3>
 
-        <label id="rennenLabel" data-rennen-city="{{ rennen.city }}">
-            Stand nach: {{ rennen.city }}
-        </label>
-
-        <div class="table-wrapper">
-
-            <table id="wmStandTabelle">
-                <thead>
-                <tr>
-                    <th></th>
-                    <th>Fahrer</th>
-                    <th>Punkte</th>
-                </tr>
-                </thead>
-                <tbody>
-
-                </tbody>
-            </table>
+        <div class="form-group">
+            <label for="wmdriver1">1. Platz:</label>
+            <select id="wmdriver1" class="driver-select"></select>
         </div>
 
-        <h1>Formel 1 Konstrukteurswertung</h1>
-
-        <div class="table-wrapper">
-
-            <table id="konstrukteursTabelle">
-                <thead>
-                <tr>
-                    <th></th>
-                    <th>Team</th>
-                    <th>Punkte</th>
-                </tr>
-                </thead>
-                <tbody>
-
-                </tbody>
-            </table>
+        <div class="form-group">
+            <label for="wmdriver2">2. Platz:</label>
+            <select id="wmdriver2" class="driver-select"></select>
         </div>
 
+        <div class="form-group">
+            <label for="wmdriver3">3. Platz:</label>
+            <select id="wmdriver3" class="driver-select"></select>
+        </div>
+
+        <h3>Weitere Tipps</h3>
+
+        <div class="form-group">
+            <label for="pptrophy">Pole Position Trophy:</label>
+            <select id="pptrophy" class="driver-select"></select>
+        </div>
+
+        <div class="form-group">
+            <label for="flaward">Fastest Lap Award:</label>
+            <select id="flaward" class="driver-select"></select>
+        </div>
+
+        <div class="form-group">
+            <label for="sdwm">Siege des Weltmeisters:</label>
+            <input
+                type="number"
+                id="sdwm"
+                class="driver-input"
+                min="1"
+                step="1"
+                placeholder="z. B. 3">
+        </div>
+
+        <div class="form-group">
+            <label for="sieger">Fahrer mit mind. 1 Sieg:</label>
+            <input
+                type="number"
+                id="sieger"
+                class="driver-input"
+                min="1"
+                step="1"
+                placeholder="z. B. 3">
+        </div>
+
+        <h3>Endstand Teams</h3>
+
+        <div class="form-group">
+            <label for="team1">1. Platz:</label>
+            <select id="team1" class="driver-select"></select>
+        </div>
+
+        <div class="form-group">
+            <label for="team2">2. Platz:</label>
+            <select id="team2" class="driver-select"></select>
+        </div>
+
+        <div class="form-group">
+            <label for="team3">3. Platz:</label>
+            <select id="team3" class="driver-select"></select>
+        </div>
+
+        <div class="form-group">
+            <label for="team4">4. Platz:</label>
+            <select id="team4" class="driver-select"></select>
+        </div>
+
+        <div class="form-group">
+            <label for="team5">5. Platz:</label>
+            <select id="team5" class="driver-select"></select>
+        </div>
+
+        <div class="form-group">
+            <label for="team6">6. Platz:</label>
+            <select id="team6" class="driver-select"></select>
+        </div>
+
+        <div class="form-group">
+            <label for="team7">7. Platz:</label>
+            <select id="team7" class="driver-select"></select>
+        </div>
+
+        <div class="form-group">
+            <label for="team8">8. Platz:</label>
+            <select id="team8" class="driver-select"></select>
+        </div>
+
+        <div class="form-group">
+            <label for="team9">9. Platz:</label>
+            <select id="team9" class="driver-select"></select>
+        </div>
+
+        <div class="form-group">
+            <label for="team10">10. Platz:</label>
+            <select id="team10" class="driver-select"></select>
+        </div>
+
+        <div class="form-group">
+            <label for="team11">11. Platz:</label>
+            <select id="team11" class="driver-select"></select>
+        </div>
+
+        <button id="save">Save Selection</button>
     </div>
 
     <script src="{{ url_for('static', filename='nav_dropdown.js') }}"></script>

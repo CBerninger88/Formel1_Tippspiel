@@ -3,8 +3,6 @@ import { populateDropdowns } from '../modules/utils.js';
 export function initSprinttippsPage(){
     console.log('Sprint-Tippabgabe- Seite Initialisierung');
 
-
-    const nameSelect = document.getElementById('name');
     const citySelect = document.getElementById('city');
     const sdriverSelects = Array.from(document.querySelectorAll('[id^="sdriver"]'));
     const saveButton = document.getElementById('save');
@@ -13,14 +11,6 @@ export function initSprinttippsPage(){
     //const tippSpieler = ['Alexander', 'Christine', 'Christoph', 'Jürgen', 'Simon', 'Ergebnis'];
     //populateDropdowns([nameSelect], tippSpieler, 'Name auswählen');
 
-    fetch('/get_users')
-        .then(response => response.json())
-        .then(names => {
-            populateDropdowns([nameSelect], names, 'Name auswählen');
-        })
-        .catch(error => {
-            console.error('Fehler beim Laden der Namen:', error);
-        });
 
     fetch('/sprint_get_cities')
         .then(response => response.json())
@@ -41,7 +31,6 @@ export function initSprinttippsPage(){
             console.error('Fehler beim Laden der Städte:', error);
         });
 
-    nameSelect.addEventListener('change', fetchSelection);
     citySelect.addEventListener('change', fetchSelection);
     saveButton.addEventListener('click', saveSelection);
 
@@ -50,10 +39,19 @@ export function initSprinttippsPage(){
 
     // Event-Listener für das Ändern der Stadt oder Saison
     function fetchSelection() {
-        const selectedName = nameSelect.value;
         const selectedCity = citySelect.value;
 
-        fetch(`/get_sprinttipps?name=${selectedName}&city=${selectedCity}`)
+        const select = document.getElementById('tipprunde-select');
+        const option = select.options[select.selectedIndex];
+        const tipprunde_id = option.dataset.id
+
+        let selectionUrl = `/get_sprinttipps?city=${encodeURIComponent(selectedCity)}`;
+
+        if (tipprunde_id) {
+            selectionUrl += `&tipprunde_id=${tipprunde_id}`;
+        }
+
+        fetch(selectionUrl)
             .then(response => response.json())
             .then(data => {
                 sdriverSelects.forEach((sDriverSelect, index) => {
@@ -65,9 +63,12 @@ export function initSprinttippsPage(){
 
     // Event-Listener für den Klick auf den Speicher-Button
     function saveSelection() {
-        const name = nameSelect.value;
         const city = citySelect.value;
         const sDriverData = sdriverSelects.map(driver => driver.value);
+
+        const select = document.getElementById('tipprunde-select');
+        const option = select.options[select.selectedIndex];
+        const tipprunde_id = option.dataset.id;
 
         // Dictionary mit Keys (driver1, driver2, etc.) generieren
         const sDrivers = {};
@@ -80,7 +81,7 @@ export function initSprinttippsPage(){
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ name, city, ...sDrivers}),
+            body: JSON.stringify({city, ...sDrivers, tipprunde_id: tipprunde_id ?? null}),
         })
         .then(response => response.json())
         .then(data => {

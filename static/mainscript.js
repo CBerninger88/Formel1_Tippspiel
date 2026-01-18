@@ -23,6 +23,12 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             break;
 
+        case 'zusatztipps':
+            import('./pages/zusatztipps.js').then(module => {
+                module.initZusatztippsPage();
+            });
+            break;
+
         case 'wmStand':
             import('./pages/wmStand.js').then(module => {
                 module.initwmStandPage();
@@ -46,6 +52,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 module.initGesamtergebnisPage();
             });
             break;
+
 
         default:
             console.log('Keine spezielle Initialisierung erforderlich');
