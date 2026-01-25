@@ -33,6 +33,9 @@ export function initSprinttippsPage(){
 
     citySelect.addEventListener('change', fetchSelection);
     saveButton.addEventListener('click', saveSelection);
+    [...sdriverSelects].forEach(select => {
+        select.addEventListener('change', markAllDuplicates);
+    });
 
     // Initiales Laden der gespeicherten Auswahl
     //citySelect.dispatchEvent(new Event('change'));
@@ -58,6 +61,7 @@ export function initSprinttippsPage(){
                    const sDriverKey = `sdriver${index + 1}`;
                    sDriverSelect.value = data[sDriverKey] || "";
                 });
+                markAllDuplicates();
             });
     }
 
@@ -87,6 +91,32 @@ export function initSprinttippsPage(){
         .then(data => {
             if (data.success) {
                 alert('Selection saved successfully!');
+            }
+        });
+    }
+
+
+    function markAllDuplicates() {
+        markDuplicatesInGroup(sdriverSelects);   // Sprint
+    }
+
+
+    function markDuplicatesInGroup(selects) {
+        const valueCount = {};
+
+        selects.forEach(select => {
+            const val = select.value;
+            if (val) {
+                valueCount[val] = (valueCount[val] || 0) + 1;
+            }
+        });
+
+        selects.forEach(select => {
+            const val = select.value;
+            if (val && valueCount[val] > 1) {
+                select.classList.add('driver-duplicate');
+            } else {
+                select.classList.remove('driver-duplicate');
             }
         });
     }

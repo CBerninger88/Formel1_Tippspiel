@@ -1,9 +1,10 @@
 import psycopg2
+from flask_mail import Mail
 from psycopg2.extras import RealDictCursor
 from flask import Flask
 from flask_login import LoginManager
 from flask_login import current_user
-from models.config import Config
+
 from routes.home import home_bp
 from routes.sprinttipps import sprinttipps_bp
 from routes.tabelle import tabelle_bp
@@ -18,17 +19,24 @@ from routes.tipprunden import tipprunden_bp
 from routes.profile import profile_bp
 from routes.admin import admin_bp
 from routes.zusatztipps import zusatztipps_bp
+from routes.auth import mail
 from db import get_db, init_db, close_connection
 from models.user import User
 import os
+from dotenv import load_dotenv
+load_dotenv()
+from models.config import Config
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-key")
 app.config.from_object(Config)
 
+mail.init_app(app)
+
 login_manager = LoginManager()
 login_manager.login_view = "auth.login"  # wohin bei @login_required
 login_manager.init_app(app)
+
 
 @login_manager.user_loader
 def load_user(user_id):

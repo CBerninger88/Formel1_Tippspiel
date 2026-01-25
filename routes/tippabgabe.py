@@ -93,39 +93,13 @@ def get_selection():
         if not fstatus['success']:
             fdriver = spieler.get_fastestlab_tipp(race_id-1, tipprunde_id)[0]
             drivers.update(fdriver)
-            spieler.set_fastestLab_tipps(race_id, fdriver['fdriver'], tipprunde_id)
+            spieler.set_fastestLab_tipps(race_id, fdriver['fdriver1'], tipprunde_id)
         drivers.update({'zeitschranke': True})
 
     else:
         drivers.update({'zeitschranke': False})
 
     return jsonify(drivers)
-
-@tippabgabe_bp.route('/get_dummy')
-def get_dummy():
-    name = request.args.get('name')
-    city = request.args.get('city').split(', ')[0].capitalize()
-
-    race_data = utils.get_raceID(city)
-    if not race_data.get('success'):
-        return jsonify({'drivers': {}, 'status': {'success': False, 'message': 'Race ID nicht gefunden'}})
-
-    race_id = race_data['race_id']
-    dummy = Dummytipps(name)
-
-    # Fahrer-Tipps abrufen
-    qualitipps, qstatus = dummy.get_quali_tipps(race_id)
-    racetipps, rstatus = dummy.get_race_tipps(race_id)
-    fastestlabtipps, fstatus = dummy.get_fastestlab_tipp(race_id)
-
-    # Daten zusammenführen
-    drivers = {**qualitipps, **racetipps, **fastestlabtipps}
-
-    # Status berechnen
-    success = all([qstatus.get('success'), rstatus.get('success'), fstatus.get('success')])
-    message = f"Quali: {qstatus.get('message', 'Kein Status')}, Race: {rstatus.get('message', 'Kein Status')}, Fastest Lap: {fstatus.get('message', 'Kein Status')}"
-
-    return jsonify({'drivers': drivers, 'status': {'success': success, 'message': message}})
 
 
 @tippabgabe_bp.route('/save_selection', methods=['POST'])
@@ -158,6 +132,54 @@ def save_selection():
     return jsonify({'success': True})
 
 
+@tippabgabe_bp.route('/get_last_selection')
+@login_required
+def get_last_selection():
+    name = current_user.username
+    city = request.args.get('city').split(', ')[0].capitalize()
+    tipprunde_id = request.args.get('tipprunde_id')
+
+    saison = app.current_app.config['SAISON']
+
+    if not city:
+        return jsonify({}), 400
+
+    if tipprunde_id is None:
+        tipprunde_id = 0
+
+    # Race-ID des aktuellen Rennens
+    race_id_res = utils.get_raceID(city, saison)
+    if not race_id_res['success']:
+        return jsonify({})
+
+    race_id = race_id_res['race_id']
+
+    # 🔹 Prüfen: Erstes Rennen (z.B. Melbourne)
+    if race_id == 1:
+        return jsonify({})  # Kein vorheriger Tipp → Button bleibt disabled
+
+    spieler = Spieler(name)
+    drivers = {}
+
+    # Race-ID vom vorherigen Rennen
+    prev_race_id = race_id - 1
+
+    # Tipps vom vorherigen Rennen holen
+    qdrivers, _ = spieler.get_quali_tipps(prev_race_id, tipprunde_id)
+    rdrivers, _ = spieler.get_race_tipps(prev_race_id, tipprunde_id)
+    fdriver, _ = spieler.get_fastestlab_tipp(prev_race_id, tipprunde_id)
+
+    # Alles zusammenpacken
+    drivers.update(qdrivers)
+    drivers.update(rdrivers)
+    drivers.update(fdriver)
+
+    # Keine automatische Setzung, nur Daten zurückgeben
+    drivers.update({'zeitschranke': False})
+
+    return jsonify(drivers)
+
+
 @tippabgabe_bp.route('/races_get_cities', methods=['GET'])
 def get_cities():
     saison = app.current_app.config['SAISON']
@@ -170,7 +192,3 @@ def get_cities():
 @tippabgabe_bp.route('/get_drivers', methods=['GET'])
 def get_drivers():
     return jsonify(utils.get_drivers())
-
-@tippabgabe_bp.route('/get_users', methods=['GET'])
-def get_users():
-    return utils.get_users()
