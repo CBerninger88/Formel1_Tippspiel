@@ -1,7 +1,7 @@
 import psycopg2
-from flask_login import current_user
+from flask_login import current_user, login_required
 from psycopg2.extras import RealDictCursor
-from flask import Blueprint, render_template, jsonify, session, app
+from flask import Blueprint, render_template, jsonify, session, app, request
 
 import utils
 from datetime import date
@@ -57,13 +57,14 @@ def gesamtnergebnis():
                            tipprunde_id=tipprunde_id
                            )
 
-@gesamtergebnis_bp.route('/get_gesamtpunkte',  methods=['POST'])
+@gesamtergebnis_bp.route('/get_gesamtpunkte')
+@login_required
 def get_gesamtpunkte():
-
-    spieler = utils.get_users()
-    heute = date.today()
-    stichtag = datetime(2025, 3, 20)
     saison = app.current_app.config['SAISON']
+    tipprunde_id = request.args.get('tipprunde_id', saison)
+    spieler = utils.get_users_in_tipprunde(tipprunde_id)
+    heute = date(2026, 3, 26)#date.today()
+    stichtag = datetime(2025, 3, 20)
     cities = utils.get_cities(saison)
 
     gefilterte_rennen = {
@@ -72,9 +73,12 @@ def get_gesamtpunkte():
         if details["datum"] <= heute
     }
 
+    return jsonify({"players": [{ "username": "Christoph", "points": 120 }, { "username": "Simon", "points": 98 }]})
+
     ergebnis = {}
-    for name in spieler:
-        if name == "Ergebnis":
+    for user in spieler:
+        name = user['username']
+        if name == "Ergebnis" or name in app.current_app.config['DUMMIES']:
             continue
         gesamtpunkte = 0
         for rennen in gefilterte_rennen:
@@ -88,3 +92,42 @@ def get_gesamtpunkte():
     status = {'success': True, 'message': 'Alles ok'}
 
     return jsonify({'spieler': ergebnis_sorted, 'status': status})
+
+@gesamtergebnis_bp.route('/get_racepunkte')
+@login_required
+def get_racepunkte():
+
+    tipprunde_id = request.args.get('tipprunde_id')
+    city = request.args.get('city').split(', ')[0].capitalize()
+
+    saison = app.current_app.config['SAISON']
+    spieler = utils.get_users_in_tipprunde(tipprunde_id)
+    heute = date(2026, 3, 26)  # date.today()
+
+    race_id = utils.get_raceID(city, saison)
+    if not race_id['success']:
+        return {}
+    else:
+        race_id = race_id['race_id']
+
+    players = []
+    for user in spieler:
+        user_id = user['id']
+        if user['username'] == "Ergebnis":
+            continue
+        qpunkte,_,_ = utils.get_qualipunkte(user_id, race_id, tipprunde_id, saison)
+        rpunkte,_,_ = utils.get_racepunkte(user_id, race_id, tipprunde_id, saison)
+        fpunkte,_,_ = utils.get_fastestlappunkte(user_id, race_id, tipprunde_id, saison)
+        gesamtpunkte = qpunkte + rpunkte + fpunkte
+        points = {'quali': qpunkte, 'race': rpunkte, 'fastestlap': fpunkte, 'total': gesamtpunkte }
+        players.append({'username': user['username'], 'points': points})
+
+    players_sorted = sorted(
+        players,
+        key=lambda x: int(x["points"]["total"]),
+        reverse=True
+    )
+
+    ergebnis = {'players': players_sorted}
+
+    return jsonify(ergebnis)

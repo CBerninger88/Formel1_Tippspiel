@@ -58,7 +58,7 @@ class Dummytipps:
         db = get_db()
         cursor = db.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         cursor.execute(f"""
-            SELECT users.id as user_id, users.username, {', '.join([f"{table}.driver{i+1}" for i in range(max_drivers)])}
+            SELECT {', '.join([f"{table}.driver{i+1}" for i in range(max_drivers)])}
             FROM {table}
             JOIN users ON {table}.user_id = users.id
             WHERE {table}.race_id = %s AND {table}.saison = %s AND {table}.user_id = %s

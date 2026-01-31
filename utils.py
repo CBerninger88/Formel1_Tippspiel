@@ -1,7 +1,11 @@
+from dataclasses import asdict
+
 import psycopg2
 from psycopg2.extras import RealDictCursor
+
+
 from db import get_db
-from flask import jsonify
+from flask import app
 from collections import defaultdict
 
 from models.dummy import Dummytipps
@@ -102,8 +106,20 @@ def get_user_id(name):
     if not result:
         return {'success': False, 'message': 'User not found'}
     else:
-        race_id = {'success': True, 'message': 'User found', 'user_id': result[0]}
-        return race_id
+        user_id = {'success': True, 'message': 'User found', 'user_id': result[0]}
+        return user_id
+
+def get_username(user_id):
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("SELECT username FROM users WHERE id = %s", (user_id,))
+    result = cursor.fetchone()
+
+    if not result:
+        return {'success': False, 'message': 'User not found'}
+    else:
+        name = {'success': True, 'message': 'User found', 'username': result[0]}
+        return name
 
 
 def get_raceID(city, saison):
@@ -624,4 +640,135 @@ def get_zusatztipps(user_id, tipprunde_id, saison):
         return dict(zip(columns, row))
     else:
         return None  # kein Tipp gefunden
+
+
+def get_qualipunkte(user_id, race_id, tipprunde_id, saison):
+    city = get_cityName(race_id)['cityName']
+
+    qualiergebnis, status = get_qualiergebnis(race_id, saison)
+    if not status['success']:
+        success = False
+        message = f'Es gibt für {city} noch kein Qualiergebnis'
+        return 0, {}, {'success': success, 'message': message}
+
+    name = get_username(user_id)['username']
+    if name in app.current_app.config['DUMMIES']:
+        dummy_service = Dummytipps()
+        qualitipps = dummy_service.get_tipps(user_id, race_id,saison, 'quali')
+    else:
+        qualitipps, status = Spieler(name).get_quali_tipps(race_id, tipprunde_id)
+        if not status['success']:
+            success = False
+            message = f'Es gibt für {name} kein Quali-Tipp'
+            return 0, {}, {'success': success, 'message': message}
+
+    trefferpunkte = [15, 15, 15, 15]
+    qpunkte = {}
+
+    qualitipps = list(qualitipps.values())
+    qualiergebnis = list(qualiergebnis.values())
+
+
+    for i, tipp in enumerate(qualitipps):
+        if tipp == qualiergebnis[i]:
+            qpunkte.update({f'qpunkte{i + 1}': trefferpunkte[i]})
+        elif tipp in qualiergebnis:
+            qpunkte.update({f'qpunkte{i + 1}': 4})
+        else:
+            qpunkte.update({f'qpunkte{i + 1}': 0})
+    msg = 'Alles ok'
+    success = True
+    qpunkte_sum = sum(list(qpunkte.values()))
+    return qpunkte_sum, qpunkte, {'success': success, 'message': msg}
+
+def get_racepunkte(user_id, race_id, tipprunde_id, saison):
+    city = get_cityName(race_id)['cityName']
+
+    wmStand, status = get_wm_stand(race_id, saison)
+    if not wmStand:
+        success = False
+        message = f'Es gibt für {city} noch keinen WM Stand'
+        return 0, {}, {'success': success, 'message': message}
+
+    raceergebnis, status = get_rennergebnis(race_id, saison)
+    if not status['success']:
+        success = False
+        message = f'Es gibt für {city} noch kein Qualiergebnis'
+        return 0, {}, {'success': success, 'message': message}
+
+    name = get_username(user_id)['username']
+    if name in app.current_app.config['DUMMIES']:
+        dummy_service = Dummytipps()
+        racetipps = dummy_service.get_tipps(user_id, race_id,saison, 'race')
+    else:
+        racetipps, status = Spieler(name).get_race_tipps(race_id, tipprunde_id)
+        if not status['success']:
+            success = False
+            message = f'Es gibt für {name} kein Race-Tipp'
+            return 0, {}, {'success': success, 'message': message}
+
+    racetipps = list(racetipps.values())
+    race_ergebnis = list(raceergebnis.values())[0:10]
+    wmStand = [eintrag["driver"] for eintrag in wmStand]
+
+    rpunkte = {}
+    for i, tipp in enumerate(racetipps):
+        if tipp == race_ergebnis[i]:
+            if city == 'Melbourne':
+                rpunkte.update({f'rpunkte{i + 1}': 10})
+            else:
+                if tipp in wmStand:
+                    j = wmStand.index(tipp)
+                    rpunkte.update({f'rpunkte{i + 1}': abs(j - i) * 10 + 10})
+
+        elif tipp != race_ergebnis[i] and tipp in race_ergebnis:
+            # if wmStand is not None and tipp in wmStand:
+            j = race_ergebnis.index(tipp)
+            if abs(i - j) > 1:
+                rpunkte.update({f'rpunkte{i + 1}': 5})
+            else:
+                rpunkte.update({f'rpunkte{i + 1}': 8})
+
+        else:
+            rpunkte.update({f'rpunkte{i + 1}': 0})
+
+    rpunkte_sum = sum(list(rpunkte.values()))
+    msg = 'Alles ok'
+    success = True
+    return rpunkte_sum, rpunkte, {'success': success, 'message': msg}
+
+def get_fastestlappunkte(user_id, race_id, tipprunde_id, saison):
+    city = get_cityName(race_id)['cityName']
+
+    fastestlapergebnis, status = get_fastestlap_ergebnis(race_id, saison)
+    if not status['success']:
+        success = False
+        message = f'Es gibt für {city} noch kein Ergebnis für die schnellste Runde'
+        return 0, {}, {'success': success, 'message': message}
+
+    name = get_username(user_id)['username']
+    if name in app.current_app.config['DUMMIES']:
+        dummy_service = Dummytipps()
+        fastestlaptipps = dummy_service.get_tipps(user_id, race_id, saison, 'fastest')
+    else:
+        fastestlaptipps, status = Spieler(name).get_fastestlab_tipp(race_id, tipprunde_id)
+        if not status['success']:
+            success = False
+            message = f'Es gibt für {name} kein Quali-Tipp'
+            return 0, {}, {'success': success, 'message': message}
+
+    fastestlaptipps = list(fastestlaptipps.values())
+    fastestlapergebnis = list(fastestlapergebnis.values())
+
+    if fastestlaptipps[0] == fastestlapergebnis[0]:
+        fastestlabpunkte = {'fpunkte': 15}
+    else:
+        fastestlabpunkte = {'fpunkte': 0}
+
+    fastestlappunkte_sum = sum(list(fastestlabpunkte.values()))
+    msg = 'Alles ok'
+    success = True
+    return fastestlappunkte_sum, fastestlabpunkte, {'success': success, 'message': msg}
+
+
 
