@@ -642,25 +642,7 @@ def get_zusatztipps(user_id, tipprunde_id, saison):
         return None  # kein Tipp gefunden
 
 
-def get_qualipunkte(user_id, race_id, tipprunde_id, saison):
-    city = get_cityName(race_id)['cityName']
-
-    qualiergebnis, status = get_qualiergebnis(race_id, saison)
-    if not status['success']:
-        success = False
-        message = f'Es gibt für {city} noch kein Qualiergebnis'
-        return 0, {}, {'success': success, 'message': message}
-
-    name = get_username(user_id)['username']
-    if name in app.current_app.config['DUMMIES']:
-        dummy_service = Dummytipps()
-        qualitipps = dummy_service.get_tipps(user_id, race_id,saison, 'quali')
-    else:
-        qualitipps, status = Spieler(name).get_quali_tipps(race_id, tipprunde_id)
-        if not status['success']:
-            success = False
-            message = f'Es gibt für {name} kein Quali-Tipp'
-            return 0, {}, {'success': success, 'message': message}
+def get_qualipunkte(qualiergebnis, qualitipps):
 
     trefferpunkte = [15, 15, 15, 15]
     qpunkte = {}
@@ -681,32 +663,7 @@ def get_qualipunkte(user_id, race_id, tipprunde_id, saison):
     qpunkte_sum = sum(list(qpunkte.values()))
     return qpunkte_sum, qpunkte, {'success': success, 'message': msg}
 
-def get_racepunkte(user_id, race_id, tipprunde_id, saison):
-    city = get_cityName(race_id)['cityName']
-
-    wmStand, status = get_wm_stand(race_id, saison)
-    if not wmStand:
-        success = False
-        message = f'Es gibt für {city} noch keinen WM Stand'
-        return 0, {}, {'success': success, 'message': message}
-
-    raceergebnis, status = get_rennergebnis(race_id, saison)
-    if not status['success']:
-        success = False
-        message = f'Es gibt für {city} noch kein Qualiergebnis'
-        return 0, {}, {'success': success, 'message': message}
-
-    name = get_username(user_id)['username']
-    if name in app.current_app.config['DUMMIES']:
-        dummy_service = Dummytipps()
-        racetipps = dummy_service.get_tipps(user_id, race_id,saison, 'race')
-    else:
-        racetipps, status = Spieler(name).get_race_tipps(race_id, tipprunde_id)
-        if not status['success']:
-            success = False
-            message = f'Es gibt für {name} kein Race-Tipp'
-            return 0, {}, {'success': success, 'message': message}
-
+def get_racepunkte(raceergebnis, racetipps, wmStand, city):
     racetipps = list(racetipps.values())
     race_ergebnis = list(raceergebnis.values())[0:10]
     wmStand = [eintrag["driver"] for eintrag in wmStand]
@@ -737,27 +694,9 @@ def get_racepunkte(user_id, race_id, tipprunde_id, saison):
     success = True
     return rpunkte_sum, rpunkte, {'success': success, 'message': msg}
 
-def get_fastestlappunkte(user_id, race_id, tipprunde_id, saison):
-    city = get_cityName(race_id)['cityName']
+def get_fastestlappunkte(fastestlapergebnis, fastestlaptipp):
 
-    fastestlapergebnis, status = get_fastestlap_ergebnis(race_id, saison)
-    if not status['success']:
-        success = False
-        message = f'Es gibt für {city} noch kein Ergebnis für die schnellste Runde'
-        return 0, {}, {'success': success, 'message': message}
-
-    name = get_username(user_id)['username']
-    if name in app.current_app.config['DUMMIES']:
-        dummy_service = Dummytipps()
-        fastestlaptipps = dummy_service.get_tipps(user_id, race_id, saison, 'fastest')
-    else:
-        fastestlaptipps, status = Spieler(name).get_fastestlab_tipp(race_id, tipprunde_id)
-        if not status['success']:
-            success = False
-            message = f'Es gibt für {name} kein Quali-Tipp'
-            return 0, {}, {'success': success, 'message': message}
-
-    fastestlaptipps = list(fastestlaptipps.values())
+    fastestlaptipps = list(fastestlaptipp.values())
     fastestlapergebnis = list(fastestlapergebnis.values())
 
     if fastestlaptipps[0] == fastestlapergebnis[0]:

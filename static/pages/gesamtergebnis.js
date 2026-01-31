@@ -60,6 +60,13 @@ export function initGesamtergebnisPage(){
         fetch(`/get_racepunkte?city=${encodeURIComponent(selectedCity)}&tipprunde_id=${tipprunde_id}`)
             .then(res => res.json())
             .then(data => {
+
+                // 🔴 Fehlerfall → Popup
+                if (!data.success) {
+                    showPopup(data.message);   // einfachstes Popup
+                    return;
+                }
+
                 data.players.forEach((player, index) => {
                     const p = player.points;
 
@@ -79,7 +86,21 @@ export function initGesamtergebnisPage(){
     }
 
 
-
+    function showPopup(msg) {
+        const div = document.createElement("div");
+        div.textContent = msg;
+        div.style = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #ffdddd;
+            padding: 12px 20px;
+            border: 1px solid #cc0000;
+            border-radius: 8px;
+    `   ;
+        document.body.appendChild(div);
+        setTimeout(() => div.remove(), 4000);
+    }
 
 
 }
