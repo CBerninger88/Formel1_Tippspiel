@@ -9,8 +9,8 @@ class City:
     def __init__(self, city):
         """Konstruktor, der den Namen der Stadt inkl race_id speichert."""
         self.city = city.capitalize()
-        self.race_id = self.get_raceID()['race_id']
-
+        self.race_id = 0#self.get_raceID()['race_id']
+'''
     def get_raceID(self):
         db = get_db()
         cursor = db.cursor()
@@ -52,16 +52,18 @@ class City:
         cursor = db.cursor()
 
         wmdrivers = wmdrivers[0:20]
-
+'''
+'''
         # 2. Daten in WMStand speichern
-        cursor.execute('''
+        cursor.execute(
                 INSERT INTO wmstand (race_id, driver1, driver2, driver3, driver4, driver5, driver6, driver7, driver8, 
                                         driver9, driver10, driver11, driver12, driver13, driver14, driver15, driver16,
                                         driver17, driver18, driver19, driver20)
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-        ''', (self.race_id, *wmdrivers))
+        , (self.race_id, *wmdrivers))
         db.commit()
-
+'''
+'''
     def get_lastyear_result(self):
         """Holt die Rennergebnisse des Vorjahres aus der API"""
         ergebnis = {}
@@ -296,3 +298,4 @@ class City:
                 continue
             spieler = Spieler(name)
             spieler.set_tipppunkte(self.race_id, tipppunkte[name])
+'''

@@ -72,27 +72,27 @@ def get_selection():
 
     spieler = Spieler(name)
     drivers = {}
-    qdrivers, qstatus = spieler.get_quali_tipps(race_id, tipprunde_id)
-    rdrivers, rstatus = spieler.get_race_tipps(race_id, tipprunde_id)
-    fdriver, fstatus = spieler.get_fastestlab_tipp(race_id, tipprunde_id)
-    drivers.update(qdrivers)
-    drivers.update(rdrivers)
-    drivers.update(fdriver)
+    qdrivers, qstatus = spieler.get_quali_tipps([race_id], tipprunde_id)
+    rdrivers, rstatus = spieler.get_race_tipps([race_id], tipprunde_id)
+    fdriver, fstatus = spieler.get_fastestlap_tipp([race_id], tipprunde_id)
+    drivers.update(qdrivers.get(race_id,{}))
+    drivers.update(rdrivers.get(race_id, {}))
+    drivers.update(fdriver.get(race_id, {}))
 
     heute = date.today()
     renndatum = datetime.strptime(request.args.get('city').split(', ')[1], "%Y-%m-%d").date()
     if (renndatum - heute).days < 3:
         if not qstatus['success']:
-            qdrivers = spieler.get_quali_tipps(race_id-1, tipprunde_id)[0]
-            drivers.update(qdrivers)
+            qdrivers = spieler.get_quali_tipps([race_id-1], tipprunde_id)[0]
+            drivers.update(qdrivers.get(race_id-1))
             spieler.set_quali_tipps(race_id, [qdrivers.get(f'qdriver{i+1}', '') for i in range(4)], tipprunde_id)
         if not rstatus['success']:
-            rdrivers = spieler.get_race_tipps(race_id-1, tipprunde_id)[0]
-            drivers.update(rdrivers)
+            rdrivers = spieler.get_race_tipps([race_id-1], tipprunde_id)[0]
+            drivers.update(rdrivers.get(race_id-1))
             spieler.set_race_tipps(race_id, [rdrivers.get(f'rdriver{i+1}', '') for i in range(10)], tipprunde_id)
         if not fstatus['success']:
-            fdriver = spieler.get_fastestlab_tipp(race_id-1, tipprunde_id)[0]
-            drivers.update(fdriver)
+            fdriver = spieler.get_fastestlap_tipp([race_id-1], tipprunde_id)[0]
+            drivers.update(fdriver.get(race_id-1))
             spieler.set_fastestLab_tipps(race_id, fdriver['fdriver1'], tipprunde_id)
         drivers.update({'zeitschranke': True})
 
@@ -165,14 +165,14 @@ def get_last_selection():
     prev_race_id = race_id - 1
 
     # Tipps vom vorherigen Rennen holen
-    qdrivers, _ = spieler.get_quali_tipps(prev_race_id, tipprunde_id)
-    rdrivers, _ = spieler.get_race_tipps(prev_race_id, tipprunde_id)
-    fdriver, _ = spieler.get_fastestlab_tipp(prev_race_id, tipprunde_id)
+    qdrivers, _ = spieler.get_quali_tipps([prev_race_id], tipprunde_id)
+    rdrivers, _ = spieler.get_race_tipps([prev_race_id], tipprunde_id)
+    fdriver, _ = spieler.get_fastestlap_tipp([prev_race_id], tipprunde_id)
 
     # Alles zusammenpacken
-    drivers.update(qdrivers)
-    drivers.update(rdrivers)
-    drivers.update(fdriver)
+    drivers.update(qdrivers.get(prev_race_id))
+    drivers.update(rdrivers.get(prev_race_id))
+    drivers.update(fdriver.get(prev_race_id))
 
     # Keine automatische Setzung, nur Daten zurückgeben
     drivers.update({'zeitschranke': False})

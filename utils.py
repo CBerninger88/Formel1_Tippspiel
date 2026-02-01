@@ -35,6 +35,23 @@ def get_cities(saison):
     }
     return cities
 
+def get_aktuellstes_race(saison):
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("""
+            SELECT race_id
+            FROM rennergebnisse
+            ORDER BY id DESC
+            LIMIT 1;
+        """, (saison,))
+    result = cursor.fetchall()
+
+    # Liste der Städte extrahieren
+    race_id = result[0][0]
+
+    return race_id
+
+
 def get_sprintCities(saison):
     db = get_db()
     cursor = db.cursor()
@@ -203,52 +220,70 @@ def get_tipper(race_id, tipprunde_id, table_name):
     names = [row[0] for row in result]
     return names
 
-def get_qualiergebnis(race_id, saison):
+def get_qualiergebnis(race_ids, saison):
     db = get_db()
     cursor = db.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
     query = """
-        SELECT driver1, driver2, driver3, driver4
+        SELECT DISTINCT ON (race_id)
+            race_id, driver1, driver2, driver3, driver4
         FROM qualiergebnisse
-        WHERE race_id = %s AND saison = %s
-        ORDER BY created_at DESC
-        LIMIT 1;
+        WHERE race_id = ANY(%s) AND saison = %s
+        ORDER BY race_id, created_at DESC;
     """
 
-    cursor.execute(query, (race_id, saison))
-    result = cursor.fetchall()
+    cursor.execute(query, (race_ids, saison))
+    results = cursor.fetchall()
 
-    if result:
-        # Prefix von driverX → qdriverX
-        return {f"q{key}": value for key, value in dict(result[0]).items()}, {'success': True, 'message': 'Ok'}
+    if not results:
+        return {}, {'success': False, 'message': 'Es gibt noch kein Quali-Ergebnis'}
 
-    message = 'Es gibt noch kein Quali-Ergebnis'
-    return {}, {'success': False, 'message': message}
+    data = {}
+
+    for row in results:
+        race_id = row["race_id"]
+        data[race_id] = {
+            f"q{k}": v for k, v in row.items() if k != "race_id"
+        }
+
+    return data, {'success': True, 'message': 'Ok'}
 
 
 
 
-def get_rennergebnis(race_id, saison):
+
+def get_rennergebnis(race_ids, saison):
     db = get_db()
     cursor = db.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-    query = f"""
-        SELECT driver1, driver2, driver3, driver4, driver5, driver6, driver7, driver8, driver9, driver10, driver11,
-                        driver12, driver13, driver14, driver15, driver16, driver17, driver18, driver19, driver20
+
+    query = """
+        SELECT DISTINCT ON (race_id)
+            race_id,
+            driver1, driver2, driver3, driver4, driver5, driver6, driver7, driver8, driver9, driver10,
+            driver11, driver12, driver13, driver14, driver15, driver16, driver17, driver18, driver19, driver20
         FROM rennergebnisse
-        WHERE race_id = %s
+        WHERE race_id = ANY(%s)
         AND saison = %s
-        ORDER BY created_at DESC
-        LIMIT 1;
+        ORDER BY race_id, created_at DESC;
     """
-    cursor.execute(query, (race_id, saison))
-    result = cursor.fetchall()
 
-    if result:
-        return {f"r{key}": value for key, value in dict(result[0]).items()}, {'success': True, 'message': 'Ok'}
+    cursor.execute(query, (race_ids, saison))
+    results = cursor.fetchall()
 
-    # Falls kein WM-Stand vorhanden ist, entsprechende Fehlermeldung zurückgeben
-    message = 'Es gibt noch kein Rennergebnis'
-    return {}, {'success': False, 'message': message}
+    if not results:
+        return {}, {'success': False, 'message': 'Es gibt noch kein Rennergebnis'}
+
+    data = {}
+
+    for row in results:
+        race_id = row["race_id"]
+
+        data[race_id] = {
+            f"r{k}": v for k, v in row.items() if k != "race_id"
+        }
+
+    return data, {'success': True, 'message': 'Ok'}
+
 
 def get_sprintergebnis(race_id, saison):
     db = get_db()
@@ -272,26 +307,35 @@ def get_sprintergebnis(race_id, saison):
     return {}, {'success': False, 'message': message}
 
 
-def get_fastestlap_ergebnis(race_id, saison):
+def get_fastestlap_ergebnis(race_ids, saison):
     db = get_db()
     cursor = db.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
     query = """
-        SELECT driver1
+        SELECT DISTINCT ON (race_id)
+            race_id, driver1
         FROM fastestlapergebnisse
-        WHERE race_id = %s AND saison = %s
-        ORDER BY created_at DESC
-        LIMIT 1;
+        WHERE race_id = ANY(%s)
+        AND saison = %s
+        ORDER BY race_id, created_at DESC;
     """
 
-    cursor.execute(query, (race_id, saison))
-    result = cursor.fetchall()
+    cursor.execute(query, (race_ids, saison))
+    results = cursor.fetchall()
 
-    if result:
-        return {f"f{key}": value for key, value in dict(result[0]).items()}, {'success': True, 'message': 'Ok'}
+    if not results:
+        return {}, {'success': False, 'message': 'Es gibt noch kein Ergebnis für die schnellste Runde'}
 
-    message = 'Es gibt noch kein Ergebnis für die schnellste Runde'
-    return {}, {'success': False, 'message': message}
+    data = {}
+
+    for row in results:
+        race_id = row["race_id"]
+        data[race_id] = {
+            f"f{k}": v for k, v in row.items() if k != "race_id"
+        }
+
+    return data, {'success': True, 'message': 'Ok'}
+
 
 def set_qualiergebnis(race_id, saison, drivers):
     """
@@ -549,12 +593,12 @@ def set_dummies(race_id, saison, qdrivers, rdrivers, fdriver):
 
     if race_id_ly['success']:
         race_id_ly = race_id_ly['race_id']
-        qualiergebnis_ly, status = get_qualiergebnis(race_id_ly, saison_ly)
-        rennergebnis_ly, status = get_rennergebnis(race_id_ly, saison_ly)
+        qualiergebnis_ly, status = get_qualiergebnis([race_id_ly], saison_ly)
+        rennergebnis_ly, status = get_rennergebnis([race_id_ly], saison_ly)
         fastest_driver_ly, status = get_fastestlap_ergebnis(race_id_ly, saison_ly)
 
-        qualiergebnis_ly_list = list(qualiergebnis_ly.values())
-        rennergebnis_ly_list = list(rennergebnis_ly.values())
+        qualiergebnis_ly_list = list(qualiergebnis_ly.get(race_id).values())
+        rennergebnis_ly_list = list(rennergebnis_ly.get(race_id).values())
         fastest_driver_ly_list = list(fastest_driver_ly.values())
 
         dummy_service.save_tipps(dummy_id, race_id_new, saison, qualiergebnis_ly_list, 'quali')
@@ -695,6 +739,9 @@ def get_racepunkte(raceergebnis, racetipps, wmStand, city):
     return rpunkte_sum, rpunkte, {'success': success, 'message': msg}
 
 def get_fastestlappunkte(fastestlapergebnis, fastestlaptipp):
+
+    if not fastestlaptipp:
+        return 0, {'fpunkte': 0}, {'success': True, 'message': 'Kein Tipp vorhanden'}
 
     fastestlaptipps = list(fastestlaptipp.values())
     fastestlapergebnis = list(fastestlapergebnis.values())

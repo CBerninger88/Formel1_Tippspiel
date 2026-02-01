@@ -45,29 +45,53 @@ class Dummytipps:
 
         db.commit()
 
-    def get_tipps(self, dummy_user_id, race_id, saison, tipp_type):
+    def get_tipps(self, dummy_user_id, race_ids, saison, tipp_type):
         """
-        Gibt Dummy-Tipps für ein Dummy und ein Rennen zurück
-        Rückgabe: Liste von Dicts mit user_id, username, driver1..driverN
+        Gibt Dummy-Tipps für ein oder mehrere Rennen zurück.
+        Rückgabe:
+            {
+                race_id: {driver1: ..., driver2: ...}
+            }
         """
         if tipp_type not in self.table_map:
             raise ValueError(f"Unknown tip type: {tipp_type}")
 
-        table, max_drivers,_ = self.table_map[tipp_type]
+        # einzelne ID erlauben
+        if not isinstance(race_ids, (list, tuple)):
+            race_ids = [race_ids]
+
+        table, max_drivers, _ = self.table_map[tipp_type]
 
         db = get_db()
         cursor = db.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+        driver_cols = ", ".join([f"{table}.driver{i + 1}" for i in range(max_drivers)])
+
         cursor.execute(f"""
-            SELECT {', '.join([f"{table}.driver{i+1}" for i in range(max_drivers)])}
+            SELECT {table}.race_id, {driver_cols}
             FROM {table}
             JOIN users ON {table}.user_id = users.id
-            WHERE {table}.race_id = %s AND {table}.saison = %s AND {table}.user_id = %s
-        """, (race_id, saison, dummy_user_id))
+            WHERE {table}.race_id = ANY(%s)
+              AND {table}.saison = %s
+              AND {table}.user_id = %s
+            ORDER BY {table}.id DESC
+        """, (race_ids, saison, dummy_user_id))
 
-        result = cursor.fetchone()
+        rows = cursor.fetchall()
 
-        return dict(result) if result else None
+        if not rows:
+            return {}
 
+        result = {}
+
+        for row in rows:
+            race_id = row.pop("race_id")
+
+            # nur neuesten Eintrag je race behalten
+            if race_id not in result:
+                result[race_id] = dict(row)
+
+        return result
 
     def get_tipps_for_frontend(self, dummy_user_id, race_id, saison, tipp_type):
         """
@@ -80,7 +104,8 @@ class Dummytipps:
         table, max_drivers, driver = self.table_map[tipp_type]
 
 
-        raw_tipps = self.get_tipps(dummy_user_id, race_id, saison, tipp_type)
+        raw_tipps = self.get_tipps(dummy_user_id, [race_id], saison, tipp_type)
+        raw_tipps = raw_tipps.get(race_id)
 
         if raw_tipps is None:
             return {}

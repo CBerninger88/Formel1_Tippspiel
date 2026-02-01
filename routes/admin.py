@@ -40,14 +40,14 @@ def get_rennergebnis():
     else:
         race_id = race_id['race_id']
 
-    qdrivers, quali_status = utils.get_qualiergebnis(race_id, saison)
-    rdrivers, race_status = utils.get_rennergebnis(race_id, saison)
-    fdriver, fastestlap_status = utils.get_fastestlap_ergebnis(race_id, saison)
+    qdrivers, quali_status = utils.get_qualiergebnis([race_id], saison)
+    rdrivers, race_status = utils.get_rennergebnis([race_id], saison)
+    fdriver, fastestlap_status = utils.get_fastestlap_ergebnis([race_id], saison)
 
     ergebnis = {}
-    ergebnis.update(qdrivers)
-    ergebnis.update(rdrivers)
-    ergebnis.update(fdriver)
+    ergebnis.update(qdrivers.get(race_id, {}))
+    ergebnis.update(rdrivers.get(race_id, {}))
+    ergebnis.update(fdriver.get(race_id, {}))
     ergebnis.update(race_status)
 
     return jsonify(ergebnis)

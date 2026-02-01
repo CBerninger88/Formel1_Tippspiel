@@ -68,13 +68,13 @@ def get_tipps():
         name = current_user.username
         ergebnis[name] = {}
         spieler = Spieler(name)
-        qualitipps = spieler.get_quali_tipps(race_id, tipprunde_id)[0]
-        racetipps = spieler.get_race_tipps(race_id, tipprunde_id)[0]
-        fastestLabtipp = spieler.get_fastestlab_tipp(race_id, tipprunde_id)[0]
+        qualitipps = spieler.get_quali_tipps([race_id], tipprunde_id)[0]
+        racetipps = spieler.get_race_tipps([race_id], tipprunde_id)[0]
+        fastestLabtipp = spieler.get_fastestlap_tipp([race_id], tipprunde_id)[0]
 
-        ergebnis[name].update(qualitipps)
-        ergebnis[name].update(racetipps)
-        ergebnis[name].update(fastestLabtipp)
+        ergebnis[name].update(qualitipps.get(race_id, {}))
+        ergebnis[name].update(racetipps.get(race_id, {}))
+        ergebnis[name].update(fastestLabtipp.get(race_id, {}))
 
 
         is_sprint = utils.is_sprint(race_id)
@@ -90,28 +90,28 @@ def get_tipps():
     names = utils.get_tipper(race_id, tipprunde_id, 'qualitipps')
     for name in names:
         spieler = Spieler(name)
-        qualitipps = spieler.get_quali_tipps(race_id, tipprunde_id)[0]
+        qualitipps = spieler.get_quali_tipps([race_id], tipprunde_id)[0]
         if name not in ergebnis:
             ergebnis[name] = {}
-        ergebnis[name].update(qualitipps)
+        ergebnis[name].update(qualitipps.get(race_id))
 
     # Get all Race Tipps
     names = utils.get_tipper(race_id, tipprunde_id, 'racetipps')
     for name in names:
         spieler = Spieler(name)
-        racetipps = spieler.get_race_tipps(race_id, tipprunde_id)[0]
+        racetipps = spieler.get_race_tipps([race_id], tipprunde_id)[0]
         if name not in ergebnis:
             ergebnis[name] = {}
-        ergebnis[name].update(racetipps)
+        ergebnis[name].update(racetipps.get(race_id))
 
     # Get fastest Lab Tipp
     names = utils.get_tipper(race_id, tipprunde_id,'fastestlab')
     for name in names:
         spieler = Spieler(name)
-        fastestLabtipp = spieler.get_fastestlab_tipp(race_id, tipprunde_id)[0]
+        fastestLabtipp = spieler.get_fastestlap_tipp([race_id], tipprunde_id)[0]
         if name not in ergebnis:
             ergebnis[name] = {}
-        ergebnis[name].update(fastestLabtipp)
+        ergebnis[name].update(fastestLabtipp.get(race_id))
 
 
     # Get Sprint Tipps if city has Sprintrennen
@@ -160,14 +160,14 @@ def get_tipps():
     ######################
     ### Get Ergebnis #####
     ######################
-    qualiergebnis,_ = utils.get_qualiergebnis(race_id, saison)
-    raceergebnis,_ = utils.get_rennergebnis(race_id, saison)
-    fastestlapergebnis,_ = utils.get_fastestlap_ergebnis(race_id, saison)
+    qualiergebnis,_ = utils.get_qualiergebnis([race_id], saison)
+    raceergebnis,_ = utils.get_rennergebnis([race_id], saison)
+    fastestlapergebnis,_ = utils.get_fastestlap_ergebnis([race_id], saison)
     if 'Ergebnis' not in ergebnis:
         ergebnis['Ergebnis'] = {}
-    ergebnis['Ergebnis'].update(qualiergebnis)
-    ergebnis['Ergebnis'].update(raceergebnis)
-    ergebnis['Ergebnis'].update(fastestlapergebnis)
+    ergebnis['Ergebnis'].update(qualiergebnis.get(race_id, {}))
+    ergebnis['Ergebnis'].update(raceergebnis.get(race_id, {}))
+    ergebnis['Ergebnis'].update(fastestlapergebnis.get(race_id, {}))
     if is_sprint:
         sprintergebnis,_ = utils.get_sprintergebnis(race_id, saison)
         ergebnis['Ergebnis'].update(sprintergebnis)

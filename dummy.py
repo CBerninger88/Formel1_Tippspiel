@@ -9,7 +9,7 @@ class Dummytipps(Spieler):
         """Konstruktor, der den Namen des Spielers speichert."""
         super().__init__(name)
 
-
+'''
     def get_quali_tipps(self, race_id):
         ergebnis = {}
         status = {'success': False, 'message': 'Ok'}
@@ -43,13 +43,13 @@ class Dummytipps(Spieler):
                 last_race = Spieler('Ergebnis')
                 qdrivers = {}
                 if race_id > 1:
-                    qdrivers = last_race.get_quali_tipps(race_id - 1)[0]
+                    qdrivers = last_race.get_quali_tipps([race_id - 1])[0]
                 else:
                     status['message'] = 'Kein LR Tipp für erstes Rennen'
 
-                if qdrivers != {}:
-                    ergebnis.update(qdrivers)
-                    self.set_quali_tipps(race_id, list(qdrivers.values()))
+                if qdrivers.get(race_id) != {}:
+                    ergebnis.update(qdrivers.get(race_id))
+                    self.set_quali_tipps(race_id, list(qdrivers.get(race_id).values()))
                     status['success'] = True
                 else:
                     status['message'] = 'Es gibt noch kein Ergebnis aus vorherigem Rennen'
@@ -204,3 +204,5 @@ class Dummytipps(Spieler):
 
         test = 4
         return test
+
+'''

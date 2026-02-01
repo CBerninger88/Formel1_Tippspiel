@@ -42,6 +42,18 @@ def gesamtnergebnis():
     # 🔹 Fallback: erste Tipprunde
     tipprunde_id = session.get('tipprunde_id') or tipprunden[0]['id']
 
+    cursor.execute("""
+           SELECT revent.city
+           FROM races r
+           JOIN race_events revent ON r.race_event_id = revent.id
+           JOIN rennergebnisse re ON r.id = re.race_id
+           ORDER BY re.id DESC
+           LIMIT 1;
+       """)
+
+    rennen = cursor.fetchone()
+
+
     # 🔹 User der aktiven Tipprunde
     cursor.execute("""
                 SELECT u.id, u.username
@@ -55,7 +67,8 @@ def gesamtnergebnis():
     return render_template("gesamtergebnis.html",
                            tipprunden=tipprunden,
                            users=users,
-                           tipprunde_id=tipprunde_id
+                           tipprunde_id=tipprunde_id,
+                           rennen=rennen
                            )
 
 @gesamtergebnis_bp.route('/get_gesamtpunkte')
@@ -66,33 +79,64 @@ def get_gesamtpunkte():
     spieler = utils.get_users_in_tipprunde(tipprunde_id)
     heute = date(2026, 3, 26)#date.today()
     stichtag = datetime(2025, 3, 20)
+
     cities = utils.get_cities(saison)
+
+    race_id = utils.get_aktuellstes_race(saison)
 
     gefilterte_rennen = {
         name: details
         for name, details in cities.items()
-        if details["datum"] <= heute
+        if details["race_id"] <= race_id
     }
 
-    return jsonify({"players": [{ "username": "Christoph", "points": 120 }, { "username": "Simon", "points": 98 }]})
+    race_ids = [v["race_id"] for v in gefilterte_rennen.values()]
 
-    ergebnis = {}
+    # Ergebnisse einmal abziehen
+    qualiergebnis, _ = utils.get_qualiergebnis([race_ids], saison)
+    raceergebnis, _ = utils.get_rennergebnis([race_ids], saison)
+    fastestlapergebnis, _ = utils.get_fastestlap_ergebnis([race_ids], saison)
+
+    players =[]
+
     for user in spieler:
-        name = user['username']
-        if name == "Ergebnis" or name in app.current_app.config['DUMMIES']:
-            continue
         gesamtpunkte = 0
-        for rennen in gefilterte_rennen:
-            tippunkte = Spieler(name).get_tipppunkte(gefilterte_rennen[rennen]['race_id'])
-            gesamtpunkte += sum(tippunkte.values())
-        ergebnis[name] = gesamtpunkte
+        user_id = user['id']
+        if user['username'] == "Ergebnis":
+            continue
 
-    ergebnis_sorted = sorted(ergebnis.items(), key=lambda item: item[1], reverse=True)
+        # Qualitipps für user abziehen
+        if user['username'] in app.current_app.config['DUMMIES']:
+            dummy_service = Dummytipps()
+            qualitipps = dummy_service.get_tipps(user_id, [race_ids], saison, 'quali')
+            racetipps = dummy_service.get_tipps(user_id, [race_ids], saison, 'race')
+            fastestlaptipp = dummy_service.get_tipps(user_id, [race_ids], saison, 'fastest')
+        else:
+            player = Spieler(user['username'])
+            qualitipps, status1 = player.get_quali_tipps([race_ids], tipprunde_id)
+            racetipps, status2 = player.get_race_tipps([race_ids], tipprunde_id)
+            fastestlaptipp, status3 = player.get_fastestlap_tipp([race_ids], tipprunde_id)
 
+        for race_id in race_ids:
+            wmStand, status = utils.get_wm_stand(race_id, saison)
+            city = utils.get_cityName(race_id)
+            qpunkte, _, _ = utils.get_qualipunkte(qualiergebnis.get(race_id), qualitipps.get(race_id, {}))
+            rpunkte, _, _ = utils.get_racepunkte(raceergebnis.get(race_id), racetipps.get(race_id, {}), wmStand, city['cityName'])
+            fpunkte, _, _ = utils.get_fastestlappunkte(fastestlapergebnis.get(race_id), fastestlaptipp.get(race_id, {}))
 
-    status = {'success': True, 'message': 'Alles ok'}
+            racepunkte = qpunkte + rpunkte + fpunkte
+            gesamtpunkte += racepunkte
 
-    return jsonify({'spieler': ergebnis_sorted, 'status': status})
+        players.append({'username': user['username'], 'points': gesamtpunkte})
+
+    players_sorted = sorted(
+        players,
+        key=lambda x: int(x["points"]),
+        reverse=True
+    )
+
+    return jsonify(players_sorted)
+
 
 @gesamtergebnis_bp.route('/get_racepunkte')
 @login_required
@@ -111,10 +155,10 @@ def get_racepunkte():
     else:
         race_id = race_id['race_id']
 
-    # Qualiergebnis einmal abziehen
-    qualiergebnis, status1 = utils.get_qualiergebnis(race_id, saison)
-    raceergebnis, status2 = utils.get_rennergebnis(race_id, saison)
-    fastestlapergebnis, status3 = utils.get_fastestlap_ergebnis(race_id, saison)
+    # Ergebnisse einmal abziehen
+    qualiergebnis, status1 = utils.get_qualiergebnis([race_id], saison)
+    raceergebnis, status2 = utils.get_rennergebnis([race_id], saison)
+    fastestlapergebnis, status3 = utils.get_fastestlap_ergebnis([race_id], saison)
     if not status1['success'] or not status2['success'] or not status3['success']:
         success = False
         message = f'Es gibt für {city} noch kein Rennergebnis'
@@ -136,17 +180,17 @@ def get_racepunkte():
         # Qualitipps für user abziehen
         if user['username'] in app.current_app.config['DUMMIES']:
             dummy_service = Dummytipps()
-            qualitipps = dummy_service.get_tipps(user_id, race_id, saison, 'quali')
-            racetipps = dummy_service.get_tipps(user_id, race_id, saison, 'race')
-            fastestlaptipp = dummy_service.get_tipps(user_id, race_id, saison, 'fastest')
-            qpunkte, _, _ = utils.get_qualipunkte(qualiergebnis, qualitipps)
-            rpunkte, _, _ = utils.get_racepunkte(raceergebnis, racetipps, wmStand, city)
-            fpunkte, _, _ = utils.get_fastestlappunkte(fastestlapergebnis, fastestlaptipp)
+            qualitipps = dummy_service.get_tipps(user_id, [race_id], saison, 'quali')
+            racetipps = dummy_service.get_tipps(user_id, [race_id], saison, 'race')
+            fastestlaptipp = dummy_service.get_tipps(user_id, [race_id], saison, 'fastest')
+            qpunkte, _, _ = utils.get_qualipunkte(qualiergebnis.get(race_id), qualitipps.get(race_id))
+            rpunkte, _, _ = utils.get_racepunkte(raceergebnis.get(race_id), racetipps.get(race_id), wmStand, city)
+            fpunkte, _, _ = utils.get_fastestlappunkte(fastestlapergebnis.get(race_id), fastestlaptipp.get(race_id))
         else:
             player = Spieler(user['username'])
-            qualitipps, status1 = player.get_quali_tipps(race_id, tipprunde_id)
-            racetipps, status2 = player.get_race_tipps(race_id, tipprunde_id)
-            fastestlaptipp, status3 = player.get_fastestlab_tipp(race_id, tipprunde_id)
+            qualitipps, status1 = player.get_quali_tipps([race_id], tipprunde_id)
+            racetipps, status2 = player.get_race_tipps([race_id], tipprunde_id)
+            fastestlaptipp, status3 = player.get_fastestlap_tipp([race_id], tipprunde_id)
             if not status1['success'] or not status2['success'] or not status3['success']:
                 success = False
                 message = f'Es gibt für {user['username']} kein vollständigen-Tipp'
@@ -154,9 +198,9 @@ def get_racepunkte():
                 rpunkte = 0
                 fpunkte = 0
             else:
-                qpunkte, _, _ = utils.get_qualipunkte(qualiergebnis, qualitipps)
-                rpunkte, _, _ = utils.get_racepunkte(raceergebnis, racetipps, wmStand, city)
-                fpunkte, _, _ = utils.get_fastestlappunkte(fastestlapergebnis, fastestlaptipp)
+                qpunkte, _, _ = utils.get_qualipunkte(qualiergebnis.get(race_id), qualitipps.get(race_id))
+                rpunkte, _, _ = utils.get_racepunkte(raceergebnis.get(race_id), racetipps.get(race_id), wmStand, city)
+                fpunkte, _, _ = utils.get_fastestlappunkte(fastestlapergebnis.get(race_id), fastestlaptipp.get(race_id))
 
         gesamtpunkte = qpunkte + rpunkte + fpunkte
         points = {'quali': qpunkte, 'race': rpunkte, 'fastestlap': fpunkte, 'total': gesamtpunkte }

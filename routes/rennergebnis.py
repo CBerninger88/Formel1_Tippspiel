@@ -12,7 +12,7 @@ rennergebnis_bp = Blueprint('rennergebnis', __name__)
 def rennergebnis():
     return render_template('rennergebnis.html')
 
-
+'''
 @rennergebnis_bp.route('/get_cities', methods=['GET'])
 def get_cities():
     cities = utils.get_cities()
@@ -79,5 +79,5 @@ def get_punkte():
             city.set_tipppunkte(tipppunkte)
 
     return jsonify({'punkte': ergebnis_sorted, 'status': status})
-
+'''
 

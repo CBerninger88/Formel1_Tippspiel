@@ -31,7 +31,7 @@ export function initGesamtergebnisPage(){
         fetch(`/get_gesamtpunkte?tipprunde_id=${tipprunde_id}`)
             .then(res => res.json())
             .then(data => {
-                data.players.forEach((player, index) => {
+                data.forEach((player, index) => {
                     const tr = document.createElement('tr');
 
                     tr.innerHTML = `

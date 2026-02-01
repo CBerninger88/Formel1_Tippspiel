@@ -1,5 +1,8 @@
+import psycopg2
+
 import utils
 from db import get_db
+from psycopg2.extras import RealDictCursor
 
 class Spieler:
     def __init__(self, name):
@@ -60,6 +63,7 @@ class Spieler:
         cursor.execute(sql, values)
         db.commit()
 
+    '''
     def calculate_qualipunkte(self, race_id):
 
         trefferpunkte = [25, 20, 15, 10]
@@ -177,7 +181,7 @@ class Spieler:
         status = {'success': success, 'message': msg}
 
         return fastestlabpunkte, status
-
+    '''
 
 
     def calculate_gesamtPunkte(self, punkte):
@@ -238,67 +242,99 @@ class Spieler:
 
         return ergebnis, status
 
-    def get_quali_tipps(self, race_id, tipprunde_id):
-        ergebnis = {}
+    def get_quali_tipps(self, race_ids, tipprunde_id):
         db = get_db()
-        cursor = db.cursor()
+        cursor = db.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
-        cursor.execute("""
-                   SELECT driver1, driver2, driver3, driver4
-                   FROM qualitipps
-                   WHERE user_id = %s AND race_id = %s AND tipprunde_id = %s
-                   ORDER BY id DESC 
-                   LIMIT 1
-               """, (self.user_id, race_id, tipprunde_id))
-        qresult = cursor.fetchone()
-        if qresult is None:
+        query = """
+            SELECT DISTINCT ON (race_id)
+                race_id,
+                driver1, driver2, driver3, driver4
+            FROM qualitipps
+            WHERE user_id = %s
+              AND race_id = ANY(%s)
+              AND tipprunde_id = %s
+            ORDER BY race_id, id DESC
+        """
+
+        cursor.execute(query, (self.user_id, race_ids, tipprunde_id))
+        results = cursor.fetchall()
+
+        if not results:
             msg = f'Keine Qualitipps für {self.name} in Tipprunde {tipprunde_id}'
-            return {}, {'success': False, 'message': msg} # Falls keine Daten vorhanden sind, gib ein leeres Dict zurück
-        status = {'success': True, 'message': 'Alles ok'}
-        return {f'qdriver{i + 1}': driver for i, driver in enumerate(qresult)}, status
+            return {}, {'success': False, 'message': msg}
 
+        data = {}
 
-    def get_race_tipps(self, race_id, tipprunde_id):
-        ergebnis = {}
+        for row in results:
+            race_id = row["race_id"]
+            data[race_id] = {f"qdriver{i + 1}": row[f"driver{i + 1}"] for i in range(4)}
+
+        return data, {'success': True, 'message': 'Alles ok'}
+
+    def get_race_tipps(self, race_ids, tipprunde_id):
         db = get_db()
-        cursor = db.cursor()
+        cursor = db.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
-        cursor.execute("""
-                    SELECT driver1, driver2, driver3, driver4, driver5, driver6, driver7, driver8, driver9, driver10
-                    FROM racetipps
-                    WHERE user_id = %s AND race_id = %s AND tipprunde_id = %s
-                    ORDER BY id DESC 
-                    LIMIT 1
-                   """, (self.user_id, race_id, tipprunde_id))
-        rresult = cursor.fetchone()
-        if rresult is None:
+        query = """
+            SELECT DISTINCT ON (race_id)
+                race_id,
+                driver1, driver2, driver3, driver4, driver5,
+                driver6, driver7, driver8, driver9, driver10
+            FROM racetipps
+            WHERE user_id = %s
+              AND race_id = ANY(%s)
+              AND tipprunde_id = %s
+            ORDER BY race_id, id DESC
+        """
+
+        cursor.execute(query, (self.user_id, race_ids, tipprunde_id))
+        results = cursor.fetchall()
+
+        if not results:
             msg = f'Keine Racetipps für {self.name} in Tipprunde {tipprunde_id}'
             return {}, {'success': False, 'message': msg}
 
-        status = {'success': True, 'message': 'Alles ok'}
-        return {f'rdriver{i + 1}': driver for i, driver in enumerate(rresult)}, status
+        data = {}
 
+        for row in results:
+            race_id = row["race_id"]
 
-    def get_fastestlab_tipp(self, race_id, tipprunde_id):
-        ergebnis = {}
+            data[race_id] = {
+                f"rdriver{i + 1}": row[f"driver{i + 1}"]
+                for i in range(10)
+            }
+
+        return data, {'success': True, 'message': 'Alles ok'}
+
+    def get_fastestlap_tipp(self, race_ids, tipprunde_id):
         db = get_db()
-        cursor = db.cursor()
+        cursor = db.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
-        cursor.execute("""
-                    SELECT driver1
-                    FROM fastestlab
-                    WHERE user_id = %s AND race_id = %s AND tipprunde_id = %s
-                    ORDER BY id DESC LIMIT 1
-                    """, (self.user_id, race_id, tipprunde_id))
-        fresult = cursor.fetchone()
+        query = """
+            SELECT DISTINCT ON (race_id)
+                race_id, driver1
+            FROM fastestlab
+            WHERE user_id = %s
+              AND race_id = ANY(%s)
+              AND tipprunde_id = %s
+            ORDER BY race_id, id DESC
+        """
 
-        if fresult is None:
-            msg = f'Keine FastestLabTipp für {self.name} in Tipprunde {tipprunde_id}'
+        cursor.execute(query, (self.user_id, race_ids, tipprunde_id))
+        results = cursor.fetchall()
+
+        if not results:
+            msg = f'Keine FastestLapTipps für {self.name} in Tipprunde {tipprunde_id}'
             return {}, {'success': False, 'message': msg}
 
-        status = {'success': True, 'message': 'Alles ok'}
-        return {f'fdriver1': fresult[0]}, status
+        data = {}
 
+        for row in results:
+            race_id = row["race_id"]
+            data[race_id] = {"fdriver1": row["driver1"]}
+
+        return data, {'success': True, 'message': 'Alles ok'}
 
     def set_quali_tipps(self, race_id, qdrivers, tipprunde_id):
         db = get_db()
