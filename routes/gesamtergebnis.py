@@ -193,7 +193,7 @@ def get_racepunkte():
             fastestlaptipp, status3 = player.get_fastestlap_tipp([race_id], tipprunde_id)
             if not status1['success'] or not status2['success'] or not status3['success']:
                 success = False
-                message = f'Es gibt für {user['username']} kein vollständigen-Tipp'
+                message = f"Es gibt für {user['username']} kein vollständigen-Tipp"
                 qpunkte = 0
                 rpunkte = 0
                 fpunkte = 0
