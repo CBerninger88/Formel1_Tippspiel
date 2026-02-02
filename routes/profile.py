@@ -3,7 +3,7 @@ from psycopg2.extras import RealDictCursor
 from flask_login import login_required, current_user
 from flask import render_template, Blueprint, session
 
-from db import get_db
+from models.db import get_db
 
 profile_bp = Blueprint("profile", __name__)
 

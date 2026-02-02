@@ -3,9 +3,8 @@ from psycopg2.extras import RealDictCursor
 from flask import Blueprint, render_template, request, jsonify, session, app
 from flask_login import login_required, current_user
 
-import utils
-from city import City
-from db import get_db
+from models import utils
+from models.db import get_db
 
 # Erstellen des Blueprints
 wmStand_bp = Blueprint('wmStand', __name__)

@@ -2,7 +2,7 @@ from psycopg2.errors import UniqueViolation
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import login_required, current_user
 from flask import Blueprint, render_template, request, redirect, url_for, flash
-from db import get_db
+from models.db import get_db
 
 tipprunden_bp = Blueprint("tipprunden", __name__, url_prefix="/tipprunden")
 
@@ -49,7 +49,7 @@ def create():
                 """
                 SELECT id
                 FROM users
-                WHERE username IN ('Dummy_WM', 'Dummy_LR', 'Dummy_LY', 'Dummy_Kon','Ergebnis')
+                WHERE username IN ('Dummy_WM', 'Dummy_LR', 'Dummy_LY', 'Dummy_Kon')
                 """
             )
             dummy_user_ids = [row[0] for row in cur.fetchall()]

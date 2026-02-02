@@ -1,15 +1,11 @@
-from dataclasses import asdict
-
 import psycopg2
 from psycopg2.extras import RealDictCursor
 
 
-from db import get_db
-from flask import app
+from models.db import get_db
 from collections import defaultdict
 
 from models.dummy import Dummytipps
-from spieler import Spieler
 
 
 def get_cities(saison):
@@ -205,7 +201,7 @@ def is_sprint(race_id):
         return is_sprint
 
 
-def get_tipper(race_id, tipprunde_id, table_name):
+def get_users_withtipp(race_id, tipprunde_id, table_name):
     db = get_db()
     cursor = db.cursor()
     query = f"""
@@ -285,26 +281,41 @@ def get_rennergebnis(race_ids, saison):
     return data, {'success': True, 'message': 'Ok'}
 
 
-def get_sprintergebnis(race_id, saison):
+def get_sprintergebnis(race_ids, saison):
     db = get_db()
     cursor = db.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-    query = f"""
-        SELECT driver1, driver2, driver3, driver4, driver5, driver6, driver7, driver8
+
+    # einzelne ID erlauben
+    if not isinstance(race_ids, (list, tuple)):
+        race_ids = [race_ids]
+
+    query = """
+        SELECT DISTINCT ON (race_id)
+            race_id,
+            driver1, driver2, driver3, driver4, driver5, driver6, driver7, driver8
         FROM sprintergebnisse
-        WHERE race_id = %s
-        AND saison = %s
-        ORDER BY created_at DESC
-        LIMIT 1;
+        WHERE race_id = ANY(%s)
+          AND saison = %s
+        ORDER BY race_id, created_at DESC;
     """
-    cursor.execute(query, (race_id, saison))
-    result = cursor.fetchall()
 
-    if result:
-        return dict(result[0]), {'success': True, 'message': 'Ok'}
+    cursor.execute(query, (race_ids, saison))
+    results = cursor.fetchall()
 
-    # Falls kein WM-Stand vorhanden ist, entsprechende Fehlermeldung zurückgeben
-    message = 'Es gibt noch kein Rennergebnis'
-    return {}, {'success': False, 'message': message}
+    if not results:
+        return {}, {'success': False, 'message': 'Es gibt noch kein Sprintergebnis'}
+
+    data = {}
+
+    for row in results:
+        race_id = row["race_id"]
+
+        data[race_id] = {
+            f"s{k}": v for k, v in row.items() if k != "race_id"
+        }
+
+    return data, {'success': True, 'message': 'Ok'}
+
 
 
 def get_fastestlap_ergebnis(race_ids, saison):
@@ -595,11 +606,11 @@ def set_dummies(race_id, saison, qdrivers, rdrivers, fdriver):
         race_id_ly = race_id_ly['race_id']
         qualiergebnis_ly, status = get_qualiergebnis([race_id_ly], saison_ly)
         rennergebnis_ly, status = get_rennergebnis([race_id_ly], saison_ly)
-        fastest_driver_ly, status = get_fastestlap_ergebnis(race_id_ly, saison_ly)
+        fastest_driver_ly, status = get_fastestlap_ergebnis([race_id_ly], saison_ly)
 
-        qualiergebnis_ly_list = list(qualiergebnis_ly.get(race_id).values())
-        rennergebnis_ly_list = list(rennergebnis_ly.get(race_id).values())
-        fastest_driver_ly_list = list(fastest_driver_ly.values())
+        qualiergebnis_ly_list = list(qualiergebnis_ly.get(race_id_ly).values())
+        rennergebnis_ly_list = list(rennergebnis_ly.get(race_id_ly).values())
+        fastest_driver_ly_list = list(fastest_driver_ly.get(race_id_ly).values())
 
         dummy_service.save_tipps(dummy_id, race_id_new, saison, qualiergebnis_ly_list, 'quali')
         dummy_service.save_tipps(dummy_id, race_id_new, saison, rennergebnis_ly_list[0:10], 'race')
@@ -607,7 +618,7 @@ def set_dummies(race_id, saison, qdrivers, rdrivers, fdriver):
 
         if sprint:
             sprintergebnis_ly, status = get_sprintergebnis(race_id_ly, saison_ly)
-            sprintergebnis_ly_list = list(sprintergebnis_ly.values())
+            sprintergebnis_ly_list = list(sprintergebnis_ly.get(race_id_ly).values())
             dummy_service.save_tipps(dummy_id, race_id_new, saison, sprintergebnis_ly_list, 'sprint')
 
     else:
@@ -755,6 +766,29 @@ def get_fastestlappunkte(fastestlapergebnis, fastestlaptipp):
     msg = 'Alles ok'
     success = True
     return fastestlappunkte_sum, fastestlabpunkte, {'success': success, 'message': msg}
+
+
+def get_sprintpunkte(sprintergebnis, sprinttipp):
+
+    if not sprinttipp:
+        return 0, {'spunkte': 0}, {'success': True, 'message': 'Kein Tipp vorhanden'}
+
+    sprinttipp = list(sprinttipp.values())
+    sprintergebnis = list(sprintergebnis.values())
+
+    spunkte = {}
+
+    for i, tipp in enumerate(sprinttipp):
+        if tipp == sprintergebnis[i]:
+            spunkte.update({f'spunkte{i + 1}': 10})
+        elif tipp in sprintergebnis:
+            spunkte.update({f'spunkte{i + 1}': 4})
+        else:
+            spunkte.update({f'spunkte{i + 1}': 0})
+    msg = 'Alles ok'
+    success = True
+    spunkte_sum = sum(list(spunkte.values()))
+    return spunkte_sum, spunkte, {'success': success, 'message': msg}
 
 
 

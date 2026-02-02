@@ -5,7 +5,7 @@ from flask_mail import Message, Mail
 from flask_login import login_user, logout_user
 from werkzeug.security import check_password_hash
 from werkzeug.security import generate_password_hash
-from db import get_db
+from models.db import get_db
 from models.user import User
 from itsdangerous import URLSafeTimedSerializer
 

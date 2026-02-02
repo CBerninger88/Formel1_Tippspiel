@@ -2,7 +2,7 @@ import psycopg2
 from psycopg2.extras import RealDictCursor
 from flask import Blueprint, render_template, session
 from flask_login import current_user
-from db import get_db
+from models.db import get_db
 
 regeln_bp = Blueprint('regeln', __name__)
 

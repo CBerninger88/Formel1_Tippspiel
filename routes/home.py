@@ -2,11 +2,11 @@ import psycopg2
 from psycopg2.extras import RealDictCursor
 from flask import Blueprint, render_template, request, jsonify, session, url_for, redirect, app
 from flask_login import login_required, current_user
-from db import get_db
+from models.db import get_db
 from models.dummy import Dummytipps
 
-import utils
-from spieler import Spieler
+from models import utils
+from models.spieler import Spieler
 
 home_bp = Blueprint('home', __name__)
 
@@ -41,6 +41,7 @@ def index(tipprunde_id=None):
 
      # 🔹 User der aktiven Tipprunde
     users = utils.get_users_in_tipprunde(tipprunde_id)
+    users.append({'id': 0, 'username': 'Ergebnis'})
 
     return render_template("home.html",
             tipprunden=tipprunden,
@@ -87,7 +88,7 @@ def get_tipps():
         return jsonify(ergebnis)
 
     # Get all Quali Tipps
-    names = utils.get_tipper(race_id, tipprunde_id, 'qualitipps')
+    names = utils.get_users_withtipp(race_id, tipprunde_id, 'qualitipps')
     for name in names:
         spieler = Spieler(name)
         qualitipps = spieler.get_quali_tipps([race_id], tipprunde_id)[0]
@@ -96,7 +97,7 @@ def get_tipps():
         ergebnis[name].update(qualitipps.get(race_id))
 
     # Get all Race Tipps
-    names = utils.get_tipper(race_id, tipprunde_id, 'racetipps')
+    names = utils.get_users_withtipp(race_id, tipprunde_id, 'racetipps')
     for name in names:
         spieler = Spieler(name)
         racetipps = spieler.get_race_tipps([race_id], tipprunde_id)[0]
@@ -105,7 +106,7 @@ def get_tipps():
         ergebnis[name].update(racetipps.get(race_id))
 
     # Get fastest Lab Tipp
-    names = utils.get_tipper(race_id, tipprunde_id,'fastestlab')
+    names = utils.get_users_withtipp(race_id, tipprunde_id, 'fastestlab')
     for name in names:
         spieler = Spieler(name)
         fastestLabtipp = spieler.get_fastestlap_tipp([race_id], tipprunde_id)[0]
@@ -118,13 +119,13 @@ def get_tipps():
     is_sprint = utils.is_sprint(race_id)
     if is_sprint:
 
-        names = utils.get_tipper(race_id, tipprunde_id, 'sprinttipps')
+        names = utils.get_users_withtipp(race_id, tipprunde_id, 'sprinttipps')
         for name in names:
             spieler = Spieler(name)
             sprinttipps = spieler.get_sprint_tipps(race_id, tipprunde_id)[0]
             if name not in ergebnis:
                 ergebnis[name] = {}
-            ergebnis[name].update(sprinttipps)
+            ergebnis[name].update(sprinttipps.get(race_id))
 
         ergebnis.update({f'sprint': is_sprint})
 
@@ -134,7 +135,7 @@ def get_tipps():
     ##########################
     #### Gett all dummies ####
     ##########################
-    dummies = ['Dummy_Kon', 'Dummy_LR', 'Dummy_LY', 'Dummy_WM']
+    dummies = app.current_app.config['DUMMIES']
     dummyservice = Dummytipps()
     for dummy in dummies:
         dummy_id = utils.get_user_id(dummy)['user_id']
@@ -170,9 +171,7 @@ def get_tipps():
     ergebnis['Ergebnis'].update(fastestlapergebnis.get(race_id, {}))
     if is_sprint:
         sprintergebnis,_ = utils.get_sprintergebnis(race_id, saison)
-        ergebnis['Ergebnis'].update(sprintergebnis)
-
-
+        ergebnis['Ergebnis'].update(sprintergebnis.get(race_id, {}))
 
     return jsonify(ergebnis)
 
@@ -191,6 +190,7 @@ def get_users():
         return jsonify([current_user.username])
     users_dict = utils.get_users_in_tipprunde(tipprunde_id)
     usernames = [entry['username'] for entry in users_dict]
+    usernames.append('Ergebnis')
     return jsonify(usernames)
 
 

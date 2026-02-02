@@ -1,17 +1,12 @@
 import psycopg2
-from flask_mail import Mail
 from psycopg2.extras import RealDictCursor
 from flask import Flask
 from flask_login import LoginManager
-from flask_login import current_user
 
 from routes.home import home_bp
-from routes.sprinttipps import sprinttipps_bp
-from routes.tabelle import tabelle_bp
 from routes.tippabgabe import tippabgabe_bp
 from routes.sprinttipps import sprinttipps_bp
-from routes.rennergebnis import rennergebnis_bp
-from routes.gesamtergebnis import gesamtergebnis_bp
+from routes.tabelle import gesamtergebnis_bp
 from routes.wmStand import wmStand_bp
 from routes.regeln import regeln_bp
 from routes.auth import auth_bp
@@ -20,7 +15,7 @@ from routes.profile import profile_bp
 from routes.admin import admin_bp
 from routes.zusatztipps import zusatztipps_bp
 from routes.auth import mail
-from db import get_db, init_db, close_connection
+from models.db import get_db, init_db, close_connection
 from models.user import User
 import os
 from dotenv import load_dotenv
@@ -51,10 +46,8 @@ def load_user(user_id):
 
 # Registriere die Blueprints
 app.register_blueprint(home_bp)
-app.register_blueprint(tabelle_bp)
 app.register_blueprint(tippabgabe_bp)
 app.register_blueprint(sprinttipps_bp)
-app.register_blueprint(rennergebnis_bp)
 app.register_blueprint(gesamtergebnis_bp)
 app.register_blueprint(wmStand_bp)
 app.register_blueprint(regeln_bp)

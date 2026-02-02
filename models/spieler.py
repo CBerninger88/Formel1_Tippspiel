@@ -1,7 +1,6 @@
 import psycopg2
 
-import utils
-from db import get_db
+from models.db import get_db
 from psycopg2.extras import RealDictCursor
 
 class Spieler:
@@ -63,126 +62,6 @@ class Spieler:
         cursor.execute(sql, values)
         db.commit()
 
-    '''
-    def calculate_qualipunkte(self, race_id):
-
-        trefferpunkte = [25, 20, 15, 10]
-        qpunkte = {}
-
-        qualitipps, status1 = self.get_quali_tipps(race_id)
-        qualitipps = list(qualitipps.values())
-        quali_ergebnis, status2 = Spieler('Ergebnis').get_quali_tipps(race_id)
-        quali_ergebnis = list(quali_ergebnis.values())
-
-        if status1['success'] and status2['success']:
-            for i, tipp in enumerate(qualitipps):
-                if tipp == quali_ergebnis[i]:
-                    qpunkte.update({f'qpunkte{i + 1}': trefferpunkte[i]})
-                elif tipp in quali_ergebnis:
-                    qpunkte.update({f'qpunkte{i + 1}': 4})
-                else:
-                    qpunkte.update({f'qpunkte{i + 1}': 0})
-            msg = 'Alles ok'
-            success = True
-            return qpunkte, {'success': success, 'message': msg}
-
-        if not status2['success']:
-            msg = f'Es ist noch kein Ergebnis eingetragen. '
-            success = False
-            return qpunkte, {'success': success, 'message': msg}
-        if not status1['success']:
-            msg = status1['message']
-            success = False
-            return qpunkte, {'success': success, 'message': msg}
-
-
-    def calculate_racepunkte(self, wmStand, race_id):
-
-        rpunkte = {}
-
-        racetipps, status1 = self.get_race_tipps(race_id)
-        racetipps = list(racetipps.values())
-        race_ergebnis, status2 = Spieler('Ergebnis').get_race_tipps(race_id)
-        race_ergebnis = list(race_ergebnis.values())
-        cityName = utils.get_cityName(race_id)['cityName']
-        wmStand = list(wmStand[0].values())
-
-        message = 'Alles ok'
-        success = True
-        if status1['success'] and status2['success']:
-
-
-            for i, tipp in enumerate(racetipps):
-                if tipp == race_ergebnis[i]:
-
-                    if cityName == 'Melbourne':
-                        rpunkte.update({f'rpunkte{i+1}': 10})
-                    else:
-                        if wmStand is not None and tipp in wmStand:
-                            j = wmStand.index(tipp)
-                            rpunkte.update({f'rpunkte{i+1}': abs(j - i) * 10 + 10})
-                        else:
-                            rpunkte.update({f'rpunkte{i+1}': 0})
-                            message = 'Kein WM Stand vorhanden'
-                            success = False
-
-                elif tipp != race_ergebnis[i] and tipp in race_ergebnis:
-                    #if wmStand is not None and tipp in wmStand:
-                    j = race_ergebnis.index(tipp)
-                    if abs(i - j) > 1:
-                        rpunkte.update({f'rpunkte{i+1}': 5})
-                    else:
-                        rpunkte.update({f'rpunkte{i+1}': 8})
-                    #else:
-                    #    if cityName == 'Melbourne':
-                    #        rpunkte.update({f'rpunkte{i+1}': 5})
-                    #    else:
-                    #        rpunkte.update({f'rpunkte{i+1}': 0})
-                    #        message = f'Kein WM Stand vorhanden oder {tipp} nicht in WM Liste'
-                    #        success = False
-                else:
-                    rpunkte.update({f'rpunkte{i+1}': 0})
-
-        if not status1['success']:
-            message += f'Keine Racetipps für {self.name}.'
-            success = False
-        if not status2['success']:
-            message += f'Noch kein Ergebnis eingetragen.'
-            success = False
-
-        status = {'success': success, 'message': message}
-        return rpunkte, status
-
-
-    def calculate_fastestLab_tipps(self, race_id):
-        fastestLab_tipp, status1 = self.get_fastestlab_tipp(race_id)
-        fastestLab_tipp = list(fastestLab_tipp.values())
-
-        fastestLab_ergebnis, status2 = Spieler('Ergebnis').get_fastestlab_tipp(race_id)
-        fastestLab_ergebnis = list(fastestLab_ergebnis.values())
-
-        fastestlabpunkte = {}
-
-        msg = ''
-        success = True
-        if status1['success'] and status2['success']:
-            if fastestLab_tipp[0] == fastestLab_ergebnis[0]:
-                fastestlabpunkte = {'fpunkte': 15}
-            else:
-                fastestlabpunkte = {'fpunkte': 0}
-            msg = 'Alles ok'
-
-        if not status1['success']:
-            msg += f'Keine Qualitipps für {self.name}.'
-            success = False
-        if not status2['success']:
-            msg += f' Noch kein Ergebnis eingetragen'
-            success = False
-        status = {'success': success, 'message': msg}
-
-        return fastestlabpunkte, status
-    '''
-
 
     def calculate_gesamtPunkte(self, punkte):
 
@@ -213,34 +92,41 @@ class Spieler:
         status = {'success': True, 'message': msg}
         return ergebnis, status
 
-
-    def get_sprint_tipps(self, race_id, tipprunde_id):
-        ergebnis = {}
+    def get_sprint_tipps(self, race_ids, tipprunde_id):
         db = get_db()
-        cursor = db.cursor()
+        cursor = db.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
-        cursor.execute("SELECT is_sprint FROM races WHERE id = %s", (race_id,))
-        result = cursor.fetchall()[0][0]
+        # einzelne ID erlauben
+        if not isinstance(race_ids, (list, tuple)):
+            race_ids = [race_ids]
 
-        if result:
-            cursor.execute("""
-                        SELECT driver1, driver2, driver3, driver4, driver5, driver6, driver7, driver8
-                        FROM sprinttipps
-                        WHERE user_id = %s AND race_id = %s AND tipprunde_id = %s
-                        ORDER BY id DESC LIMIT 1
-                        """, (self.user_id, race_id, tipprunde_id))
-            sresult = cursor.fetchone()
+        cursor.execute("""
+            SELECT DISTINCT ON (t.race_id)
+                t.race_id,
+                t.driver1, t.driver2, t.driver3, t.driver4,
+                t.driver5, t.driver6, t.driver7, t.driver8
+            FROM sprinttipps t
+            JOIN races r ON r.id = t.race_id
+            WHERE t.user_id = %s
+              AND t.tipprunde_id = %s
+              AND t.race_id = ANY(%s)
+              AND r.is_sprint = TRUE
+            ORDER BY t.race_id, t.id DESC
+        """, (self.user_id, tipprunde_id, race_ids))
 
-            if sresult is None:
-                msg = f'Keine Sprinttipps für {self.name} in Tipprunde {tipprunde_id}'
-                return {}, {'success': False, 'message': msg}  # Falls keine Daten vorhanden sind, gib ein leeres Dict zurück
+        rows = cursor.fetchall()
 
-            ergebnis.update({f'sdriver{i + 1}': sresult[i] for i in range(len(sresult))})
-            status = {'success': True, 'message': 'Alles ok'}
-        else:
-            status = {'success': False, 'message': 'Es handelt sich nicht um eine Sprintrennen'}
+        if not rows:
+            msg = f'Keine Sprinttipps für {self.name} in Tipprunde {tipprunde_id}'
+            return {}, {'success': False, 'message': msg}
 
-        return ergebnis, status
+        result = {}
+
+        for row in rows:
+            race_id = row.pop("race_id")
+            result[race_id] = {f"s{k}": v for k, v in row.items()}
+
+        return result, {'success': True, 'message': 'Alles ok'}
 
     def get_quali_tipps(self, race_ids, tipprunde_id):
         db = get_db()

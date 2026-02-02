@@ -1,10 +1,7 @@
-from flask import Blueprint, render_template, request, jsonify, session, app
-from flask_login import login_required, current_user
+from flask import Blueprint, render_template, request, jsonify, app
+from flask_login import login_required
 from models.decorator import admin_required
-import utils
-from spieler import Spieler
-from datetime import date
-from datetime import datetime
+from models import utils
 
 admin_bp = Blueprint("admin", __name__, url_prefix="/admin")
 
@@ -71,8 +68,8 @@ def get_sprintergebnis():
         race_id = race_id['race_id']
 
     ergebnis = {}
-    drivers, success = utils.get_sprintergebnis(race_id, saison)
-    ergebnis.update(drivers)
+    drivers, success = utils.get_sprintergebnis([race_id], saison)
+    ergebnis.update(drivers.get(race_id))
     ergebnis.update(success)
 
     return jsonify(ergebnis)

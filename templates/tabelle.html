@@ -5,18 +5,126 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>F1 Driver Selection</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+        <script src="{{ url_for('static', filename='mainscript.js') }}"></script>
+
 </head>
-<body data-page-id="tabelle">
+
+<body data-page-id="gesamtergebnis">
     <div class="container">
+         <!-- Top-Bar -->
+        <div class="top-bar">
+            <div class="tipprunde-container">
+                Tipprunde:
+                <select id="tipprunde-select" class="tipprunde-select" onchange="location.href=this.value;">
+                    {% if tipprunden %}
+                    {% for t in tipprunden %}
+                    <option value="{{ url_for('home.change_tipprunde', tipprunde_id=t.id) }}"
+                            data-id="{{ t.id }}"
+                            {% if t.id== tipprunde_id %}selected{% endif %}>
+                        {{ t.name }}
+                    </option>
+                    {% endfor %}
+                    {% else %}
+                    <option value="#">None</option>
+                    {% endif %}
+                </select>
+            </div>
+
+            <div class="login-status">
+                {% if current_user.is_authenticated %}
+                Eingeloggt als: {{ current_user.username }}
+                <form action="{{ url_for('auth.logout') }}" method="get" style="display:inline;">
+                    <button type="submit" class="logout-btn">Logout</button>
+                </form>
+                {% else %}
+                <a href="{{ url_for('auth.login') }}">Login</a>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Navigation -->
         <nav>
-            <ul>
-                <li><a href="/">Home</a></li>
-                <li><a href="/tippabgabe">Tippabgabe</a></li>
-                <li><a href="/tabelle">Tabelle</a></li>
-            </ul>
+            <div class="nav-scroll">
+                <ul>
+                    <li><a href="/">Home</a></li>
+                    <li class="drop-wrapper">
+                        <a href="javascript:void(0);" class="dropbtn" data-dropdown="dropdown-tippabgabe">Tippabgabe</a>
+                    </li>
+                    <li><a href="/gesamtergebnis">Tabelle</a></li>
+                    <li><a href="/wmStand">WM Stand</a></li>
+                    <li><a href="/regeln">Regeln</a></li>
+                    <li><a href="/profile">Profil</a></li>
+                    {% if current_user.is_authenticated and current_user.is_admin %}
+                    <li class="drop-wrapper">
+                        <a href="javascript:void(0);" class="dropbtn" data-dropdown="dropdown-admin">Admin</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
         </nav>
 
-        <h1>Formel 1 Tippspiel: Hier soll die Tabbel hinkommen</h1>
+        <!-- Dropdowns jetzt **außerhalb der Navbar** -->
+        <div class="dropdown-content-wrapper">
+            <div class="dropdown-content" id="dropdown-tippabgabe">
+                <a href="/tippabgabe">Rennen</a>
+                <a href="/sprinttipps">Sprintrennen</a>
+                <a href="/zusatztipps">Zusatztipps</a>
+            </div>
+            {% if current_user.is_authenticated and current_user.is_admin %}
+            <div class="dropdown-content" id="dropdown-admin">
+                <a href="/admin/rennergebnisse">🏁 Rennergebnisse</a>
+                <a href="/admin/sprintergebnisse">👤 Sprintergebnisse</a>
+                <a href="/admin/tipprunden">📋 Tipprunden</a>
+                <a href="/admin/settings">⚙️ Einstellungen</a>
+            </div>
+            {% endif %}
+        </div>
+
+
+        <h1>Gesamttabelle</h1>
+
+         <label id="rennenLabel" data-rennen-city="{{ rennen.city }}">
+            Stand nach: {{ rennen.city }}
+        </label>
+
+        <div class="table-wrapper">
+            <table id="gesamttabelle">
+                <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Name</th>
+                    <th>Punkte</th>
+                </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+
+
+        <label for="citySelect">Rennen:</label>
+        <select id="citySelect" class="driver-select">
+            <option value="">Bitte Rennen auswählen...</option>
+        </select>
+
+        <div class="table-wrapper">
+            <table id="rennergebnisTabelle">
+                <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Spieler</th>
+                    <th>Quali</th>
+                    <th>Race</th>
+                    <th>Fastest Lap</th>
+                    <th>Gesamt</th>
+                </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+
+        </div>
 
     </div>
+
+    <script src="{{ url_for('static', filename='nav_dropdown.js') }}"></script>
 </body>
+</html>

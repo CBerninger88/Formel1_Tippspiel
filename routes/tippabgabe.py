@@ -3,11 +3,9 @@ from flask_login import current_user, login_required
 from psycopg2.extras import RealDictCursor
 from flask import Blueprint, render_template, request, jsonify, session, app
 
-
-import utils
-from db import get_db
-from dummy import Dummytipps
-from spieler import Spieler
+from models import utils
+from models.db import get_db
+from models.spieler import Spieler
 from datetime import date
 from datetime import datetime
 

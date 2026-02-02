@@ -1,6 +1,5 @@
 import psycopg2.extras
-from flask import current_app
-from db import get_db
+from models.db import get_db
 
 
 class Dummytipps:
