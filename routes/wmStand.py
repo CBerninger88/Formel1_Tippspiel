@@ -78,7 +78,8 @@ def get_cities():
 
 @wmStand_bp.route('/wmStand_get_drivers', methods=['GET'])
 def get_drivers():
-    return jsonify(utils.get_drivers())
+    saison = app.current_app.config['SAISON']
+    return jsonify(utils.get_drivers(saison))
 
 
 @wmStand_bp.route('/get_wm_stand')

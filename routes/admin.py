@@ -85,7 +85,7 @@ def save_rennergebnis():
 
     # Quali-Fahrer (1-4), race fahrer (1-10), fastestLab Fahrer auslesen (Standardwert ist ein leerer String, falls nicht übergeben)
     qdrivers = [data.get(f'qdriver{i + 1}', '') for i in range(4)]
-    rdrivers = [data.get(f'driver{i + 1}', '') for i in range(20)]
+    rdrivers = [data.get(f'driver{i + 1}', '') for i in range(22)]
     fdriver = [data.get(f'fdriver', '')]
 
     race_id = utils.get_raceID(city, saison)
@@ -151,7 +151,8 @@ def get_sprintCities():
 @login_required
 @admin_required
 def get_drivers():
-    return jsonify(utils.get_drivers())
+    saison = app.current_app.config['SAISON']
+    return jsonify(utils.get_drivers(saison))
 
 @admin_bp.route("/races")
 @login_required

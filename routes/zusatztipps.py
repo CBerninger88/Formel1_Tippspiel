@@ -81,7 +81,8 @@ def save_zusatztipps():
 
 @zusatztipps_bp.route('/get_drivers', methods=['GET'])
 def get_drivers():
-    return jsonify(utils.get_drivers())
+    saison = app.current_app.config['SAISON']
+    return jsonify(utils.get_drivers(saison))
 
 
 @zusatztipps_bp.route('/get_teams', methods=['GET'])

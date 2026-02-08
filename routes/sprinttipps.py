@@ -95,7 +95,7 @@ def save_sprinttipps():
         race_id = race_id['race_id']
 
     spieler = Spieler(name)
-    spieler.set_sprint_tipps(race_id, sdrivers, tipprunde_id)
+    spieler.set_sprint_tipps(race_id, tipprunde_id, saison, sdrivers)
 
     return jsonify({'success': True})
 
@@ -110,6 +110,7 @@ def get_cities():
 
 @sprinttipps_bp.route('/get_drivers', methods=['GET'])
 def get_drivers():
-    return jsonify(utils.get_drivers())
+    saison = app.current_app.config['SAISON']
+    return jsonify(utils.get_drivers(saison))
 
 

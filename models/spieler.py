@@ -222,29 +222,29 @@ class Spieler:
 
         return data, {'success': True, 'message': 'Alles ok'}
 
-    def set_quali_tipps(self, race_id, qdrivers, tipprunde_id):
+    def set_quali_tipps(self, race_id, tipprunde_id, saison, qdrivers):
         db = get_db()
         cursor = db.cursor()
 
         # 3. Daten in QualiTips speichern
         cursor.execute('''
-                 INSERT INTO qualitipps (user_id, race_id, driver1, driver2, driver3, driver4, tipprunde_id, created_at)
-                 VALUES (%s, %s, %s, %s, %s, %s, %s, Now())
-         ''', (self.user_id, race_id, *qdrivers, tipprunde_id))
+                 INSERT INTO qualitipps (user_id, race_id, tipprunde_id, saison, created_at, driver1, driver2, driver3, driver4)
+                 VALUES (%s, %s, %s, %s, NOW(), %s, %s, %s, %s)
+         ''', (self.user_id, race_id, tipprunde_id, saison, *qdrivers))
         db.commit()
 
 
-    def set_race_tipps(self, race_id, rdrivers, tipprunde_id):
+    def set_race_tipps(self, race_id, tipprunde_id, saison, rdrivers):
         db = get_db()
         cursor = db.cursor()
 
         cursor.execute('''
-                        INSERT INTO racetipps (user_id, race_id, driver1, driver2, driver3, driver4, driver5, driver6, driver7, driver8, driver9, driver10, tipprunde_id, created_at)
-                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, Now())
-                ''', (self.user_id, race_id, *rdrivers, tipprunde_id))
+                        INSERT INTO racetipps (user_id, race_id, tipprunde_id, saison, created_at, driver1, driver2, driver3, driver4, driver5, driver6, driver7, driver8, driver9, driver10)
+                        VALUES (%s, %s, %s, %s, NOW(), %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                ''', (self.user_id, race_id, tipprunde_id, saison, *rdrivers))
         db.commit()
 
-    def set_fastestLab_tipps(self, race_id, fdriver, tipprunde_id):
+    def set_fastestLab_tipps(self, race_id, tipprunde_id, saison, fdriver):
         db = get_db()
         cursor = db.cursor()
 
@@ -252,18 +252,18 @@ class Spieler:
 
         # 3. Daten in FastestLab speichern
         cursor.execute('''
-                           INSERT INTO fastestlab (user_id, race_id, driver1, tipprunde_id, created_at)
-                           VALUES (%s, %s, %s, %s, Now())
-                   ''', (self.user_id, race_id, driver, tipprunde_id))
+                           INSERT INTO fastestlab (user_id, race_id, tipprunde_id, saison, created_at, driver1)
+                           VALUES (%s, %s, %s, %s, NOW(), %s)
+                   ''', (self.user_id, race_id, tipprunde_id, saison, driver))
         db.commit()
 
-    def set_sprint_tipps(self, race_id, sdrivers, tipprunde_id):
+    def set_sprint_tipps(self, race_id, tipprunde_id, saison, sdrivers):
         db = get_db()
         cursor = db.cursor()
 
         # 3. Daten in SprintTipps speichern
         cursor.execute('''
-                    INSERT INTO sprinttipps (user_id, race_id, driver1, driver2, driver3, driver4, driver5, driver6, driver7, driver8, tipprunde_id, created_at)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s,%s,NOW())
-            ''', (self.user_id, race_id, *sdrivers, tipprunde_id))
+                    INSERT INTO sprinttipps (user_id, race_id, tipprunde_id, saison, created_at, driver1, driver2, driver3, driver4, driver5, driver6, driver7, driver8)
+                    VALUES (%s, %s, %s, %s, NOW(), %s, %s, %s, %s, %s, %s,%s,%s)
+            ''', (self.user_id, race_id, tipprunde_id, saison, *sdrivers))
         db.commit()

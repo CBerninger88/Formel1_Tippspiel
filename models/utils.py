@@ -74,10 +74,16 @@ def get_sprintCities(saison):
     return cities
 
 
-def get_drivers():
+def get_drivers(saison):
     db = get_db()
     cursor = db.cursor()
-    cursor.execute("SELECT name FROM drivers ORDER BY name ASC;")
+    cursor.execute("""
+            SELECT d.name
+            FROM season_drivers sd
+            JOIN drivers d ON d.id = sd.driver_id
+            WHERE sd.saison = %s
+            ORDER BY d.name ASC;
+        """, (saison,))
     result = cursor.fetchall()
 
     # Liste der Fahrer extrahieren
@@ -369,8 +375,8 @@ def set_rennergebnis(race_id, saison, drivers):
     cursor = db.cursor()
 
     cursor.execute('''
-        INSERT INTO rennergebnisse (race_id, saison, driver1, driver2, driver3, driver4, driver5, driver6, driver7, driver8, driver9, driver10, driver11, driver12, driver13, driver14, driver15, driver16, driver17, driver18, driver19, driver20)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        INSERT INTO rennergebnisse (race_id, saison, driver1, driver2, driver3, driver4, driver5, driver6, driver7, driver8, driver9, driver10, driver11, driver12, driver13, driver14, driver15, driver16, driver17, driver18, driver19, driver20, driver21, driver22)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
     ''', (race_id, saison, *drivers,))
     db.commit()
 
@@ -407,7 +413,7 @@ def get_wm_stand(race_id, saison):
     cursor = db.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     cursor.execute("""
         SELECT DISTINCT ON (race_id) driver1, driver2, driver3, driver4, driver5, driver6, driver7, driver8, driver9, driver10, driver11,
-                        driver12, driver13, driver14, driver15, driver16, driver17, driver18, driver19, driver20
+                        driver12, driver13, driver14, driver15, driver16, driver17, driver18, driver19, driver20, driver21, driver22
         FROM rennergebnisse
         WHERE saison = %s
         AND race_id <= %s
@@ -454,11 +460,11 @@ def berechne_wm_stand(rennergebnisse, sprintergebnisse):
 
     fahrer_stats = defaultdict(lambda: {
         "punkte": 0,
-        "platzierungen": [0] * 20  # Index 0 = Platz 1
+        "platzierungen": [0] * 22  # Index 0 = Platz 1
     })
 
     for rennen in rennergebnisse:
-        for platz in range(1, 21):
+        for platz in range(1, 23):
             driver = rennen[f'driver{platz}']
             if not driver:
                 continue
@@ -485,11 +491,11 @@ def sort_key(item):
 
 def get_team_stand(race_id, saison):
     fahrer_wm, _ = get_wm_stand(race_id, saison)
-    return berechne_team_wm_stand(fahrer_wm)
+    return berechne_team_wm_stand(fahrer_wm, saison)
 
 
-def berechne_team_wm_stand(fahrer_wm):
-    driver_to_team = get_driver_team_mapping()
+def berechne_team_wm_stand(fahrer_wm, saison):
+    driver_to_team = get_driver_team_mapping(saison)
 
     team_punkte = defaultdict(int)
 
@@ -515,13 +521,15 @@ def berechne_team_wm_stand(fahrer_wm):
 
     return team_wm
 
-def get_driver_team_mapping():
+def get_driver_team_mapping(saison):
     db = get_db()
     cursor = db.cursor()
     cursor.execute("""
-        SELECT name, team
-        FROM drivers
-    """)
+            SELECT d.name, sd.team
+            FROM season_drivers sd
+            JOIN drivers d ON d.id = sd.driver_id
+            WHERE sd.saison = %s
+        """, (saison,))
     return dict(cursor.fetchall())
 
 def set_dummies(race_id, saison, qdrivers, rdrivers, fdriver):
@@ -566,7 +574,7 @@ def set_dummies(race_id, saison, qdrivers, rdrivers, fdriver):
     ##### Dummy_Kon #####
     dummy_id = get_user_id('Dummy_Kon')['user_id']
     team_wm = get_team_stand(race_id, saison)
-    driver_team_mapping = get_driver_team_mapping()
+    driver_team_mapping = get_driver_team_mapping(saison)
     top5_teams = [team["team"] for team in team_wm[:5]]
 
     team_to_drivers = defaultdict(list)

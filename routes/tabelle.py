@@ -30,28 +30,30 @@ def gesamtnergebnis():
             """, (current_user.id,))
     tipprunden = cursor.fetchall()
 
+    # Aktuelles Rennen mir Rennergebnis
+    cursor.execute("""
+               SELECT revent.city
+               FROM races r
+               JOIN race_events revent ON r.race_event_id = revent.id
+               JOIN rennergebnisse re ON r.id = re.race_id
+               ORDER BY re.id DESC
+               LIMIT 1;
+           """)
+
+    rennen = cursor.fetchone()
+
     # 🔹 Fall: User ist in keiner Tipprunde
     if not tipprunden:
         return render_template(
             "tabelle.html",
             tipprunden=[],
             users=[current_user],
-            tipprunde_id=None
+            tipprunde_id=None,
+            rennen = rennen
         )
 
     # 🔹 Fallback: erste Tipprunde
     tipprunde_id = session.get('tipprunde_id') or tipprunden[0]['id']
-
-    cursor.execute("""
-           SELECT revent.city
-           FROM races r
-           JOIN race_events revent ON r.race_event_id = revent.id
-           JOIN rennergebnisse re ON r.id = re.race_id
-           ORDER BY re.id DESC
-           LIMIT 1;
-       """)
-
-    rennen = cursor.fetchone()
 
 
     # 🔹 User der aktiven Tipprunde

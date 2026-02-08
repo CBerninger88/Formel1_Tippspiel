@@ -83,15 +83,15 @@ def get_selection():
         if not qstatus['success']:
             qdrivers = spieler.get_quali_tipps([race_id-1], tipprunde_id)[0]
             drivers.update(qdrivers.get(race_id-1))
-            spieler.set_quali_tipps(race_id, [qdrivers.get(f'qdriver{i+1}', '') for i in range(4)], tipprunde_id)
+            spieler.set_quali_tipps(race_id, tipprunde_id, saison, [qdrivers.get(f'qdriver{i+1}', '') for i in range(4)])
         if not rstatus['success']:
             rdrivers = spieler.get_race_tipps([race_id-1], tipprunde_id)[0]
             drivers.update(rdrivers.get(race_id-1))
-            spieler.set_race_tipps(race_id, [rdrivers.get(f'rdriver{i+1}', '') for i in range(10)], tipprunde_id)
+            spieler.set_race_tipps(race_id, tipprunde_id, saison, [rdrivers.get(f'rdriver{i+1}', '') for i in range(10)])
         if not fstatus['success']:
             fdriver = spieler.get_fastestlap_tipp([race_id-1], tipprunde_id)[0]
             drivers.update(fdriver.get(race_id-1))
-            spieler.set_fastestLab_tipps(race_id, fdriver['fdriver1'], tipprunde_id)
+            spieler.set_fastestLab_tipps(race_id, tipprunde_id, saison, fdriver['fdriver1'])
         drivers.update({'zeitschranke': True})
 
     else:
@@ -123,9 +123,9 @@ def save_selection():
         race_id = race_id['race_id']
 
     spieler = Spieler(name)
-    spieler.set_quali_tipps(race_id, qdrivers, tipprunde_id)
-    spieler.set_race_tipps(race_id, rdrivers, tipprunde_id)
-    spieler.set_fastestLab_tipps(race_id, fdriver, tipprunde_id)
+    spieler.set_quali_tipps(race_id, tipprunde_id, saison, qdrivers)
+    spieler.set_race_tipps(race_id, tipprunde_id, saison, rdrivers)
+    spieler.set_fastestLab_tipps(race_id, tipprunde_id, saison, fdriver)
 
     return jsonify({'success': True})
 
@@ -189,4 +189,5 @@ def get_cities():
 
 @tippabgabe_bp.route('/get_drivers', methods=['GET'])
 def get_drivers():
-    return jsonify(utils.get_drivers())
+    saison = app.current_app.config['SAISON']
+    return jsonify(utils.get_drivers(saison))
