@@ -1,17 +1,17 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Profil - F1 Tippspiel</title>
+    <title>F1 Driver Selection</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+        <script src="{{ url_for('static', filename='mainscript.js') }}"></script>
+
 </head>
 
-<body data-page-id="profile">
-
+<body data-page-id="gesamtergebnis">
     <div class="container">
-
-          <!-- Top-Bar -->
+         <!-- Top-Bar -->
         <div class="top-bar">
             <div class="tipprunde-container">
                 Tipprunde:
@@ -46,7 +46,7 @@
         <nav>
             <div class="nav-scroll">
                 <ul>
-                    <li><a href="{{ url_for('home.index', tipprunde_id=tipprunde_id) }}">Home</a></li>
+                    <li><a href="/">Home</a></li>
                     <li class="drop-wrapper">
                         <a href="javascript:void(0);" class="dropbtn" data-dropdown="dropdown-tippabgabe">Tippabgabe</a>
                     </li>
@@ -80,39 +80,9 @@
             {% endif %}
         </div>
 
+        <h1>Tabelle</h1>
+        <h3>Bitte zunächst Tipprunde erstellen oder beitreten</h3>
 
-        <!-- Logo & Titel -->
-        <h1>Formel 1 Tippspiel</h1>
-        <img src="{{ url_for('static', filename='Logo_Gans_und_Goessel_neu.jpg') }}"
-             alt="Formel 1 Logo"
-             class="login-logo">
-
-        <!-- Username anzeigen -->
-        <h2 class="login-title">Hallo, {{ current_user.username }}!</h2>
-
-        <!-- Buttons -->
-        <div class="form-buttons">
-            <!-- Tipprunde erstellen -->
-            <a href="{{ url_for('tipprunden.create') }}" class="register-btn">
-                Tipprunde erstellen
-            </a>
-
-            <!-- Tipprunde beitreten -->
-            <a href="{{ url_for('tipprunden.join') }}" class="register-btn">
-                Tipprunde beitreten
-            </a>
-        </div>
-
-        <!-- Flash-Messages -->
-        {% with messages = get_flashed_messages() %}
-            {% if messages %}
-                <ul class="flash-messages">
-                    {% for message in messages %}
-                        <li>{{ message }}</li>
-                    {% endfor %}
-                </ul>
-            {% endif %}
-        {% endwith %}
     </div>
 
     <script src="{{ url_for('static', filename='nav_dropdown.js') }}"></script>

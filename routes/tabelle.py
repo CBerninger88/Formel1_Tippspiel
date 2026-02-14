@@ -45,7 +45,7 @@ def gesamtnergebnis():
     # 🔹 Fall: User ist in keiner Tipprunde
     if not tipprunden:
         return render_template(
-            "tabelle.html",
+            "tabelle_temp.html",
             tipprunden=[],
             users=[current_user],
             tipprunde_id=None,

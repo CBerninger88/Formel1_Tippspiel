@@ -1,6 +1,6 @@
 import psycopg2
 from psycopg2.extras import RealDictCursor
-from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app
+from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app, session
 from flask_mail import Message, Mail
 from flask_login import login_user, logout_user
 from werkzeug.security import check_password_hash
@@ -30,6 +30,19 @@ def login():
         user = cursor.fetchone()
 
         if user and check_password_hash(user["password_hash"], password):
+
+            # 🔹 Tipprunden des aktuellen Users
+            cursor.execute("""
+                            SELECT t.id, t.name
+                            FROM tipprunden t
+                            JOIN tipprunden_user tu ON tu.tipprunde_id = t.id
+                            WHERE tu.user_id = %s
+                            ORDER BY t.name
+                        """, (user['id'],))
+            tipprunden = cursor.fetchall()
+
+            session['tipprunde_id'] = tipprunden[0]['id']
+
             login_user(User(user["id"], user["username"], user["password_hash"]))
             return redirect(url_for("home.index"))
         else:

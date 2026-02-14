@@ -1,7 +1,7 @@
 from psycopg2.errors import UniqueViolation
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import login_required, current_user
-from flask import Blueprint, render_template, request, redirect, url_for, flash
+from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 from models.db import get_db
 
 tipprunden_bp = Blueprint("tipprunden", __name__, url_prefix="/tipprunden")
@@ -65,6 +65,8 @@ def create():
 
             conn.commit()
 
+            session['tipprunde_id'] = tipprunde_id
+
             flash("✅ Tipprunde erfolgreich erstellt!")
             return redirect(url_for("tipprunden.create"))
 
@@ -124,6 +126,8 @@ def join():
             db.commit()
             flash("✅ Erfolgreich der Tipprunde beigetreten!")
             cur.close()
+
+            session['tipprunde_id'] = tipprunde_id
             return redirect(url_for("profile.profile"))
 
         except UniqueViolation:

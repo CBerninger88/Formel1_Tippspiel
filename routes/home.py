@@ -32,7 +32,7 @@ def index(tipprunde_id=None):
         return render_template(
             "home.html",
             tipprunden=[],
-            users=[current_user],
+            users=[current_user, {'id': 0, 'username': 'Ergebnis'}],
             tipprunde_id=None
         )
 
@@ -77,13 +77,27 @@ def get_tipps():
         ergebnis[name].update(racetipps.get(race_id, {}))
         ergebnis[name].update(fastestLabtipp.get(race_id, {}))
 
-
         is_sprint = utils.is_sprint(race_id)
         if is_sprint:
             sprinttipps = spieler.get_sprint_tipps(race_id, tipprunde_id)[0]
             ergebnis[name].update(sprinttipps)
 
         ergebnis.update({f'sprint': is_sprint})
+
+        ######################
+        ### Get Ergebnis #####
+        ######################
+        qualiergebnis, _ = utils.get_qualiergebnis([race_id], saison)
+        raceergebnis, _ = utils.get_rennergebnis([race_id], saison)
+        fastestlapergebnis, _ = utils.get_fastestlap_ergebnis([race_id], saison)
+        if 'Ergebnis' not in ergebnis:
+            ergebnis['Ergebnis'] = {}
+        ergebnis['Ergebnis'].update(qualiergebnis.get(race_id, {}))
+        ergebnis['Ergebnis'].update(raceergebnis.get(race_id, {}))
+        ergebnis['Ergebnis'].update(fastestlapergebnis.get(race_id, {}))
+        if is_sprint:
+            sprintergebnis, _ = utils.get_sprintergebnis(race_id, saison)
+            ergebnis['Ergebnis'].update(sprintergebnis.get(race_id, {}))
 
         return jsonify(ergebnis)
 
@@ -187,7 +201,7 @@ def get_cities():
 def get_users():
     tipprunde_id = request.args.get('tipprunde_id')
     if tipprunde_id is None:
-        return jsonify([current_user.username])
+        return jsonify([current_user.username, 'Ergebnis'])
     users_dict = utils.get_users_in_tipprunde(tipprunde_id)
     usernames = [entry['username'] for entry in users_dict]
     usernames.append('Ergebnis')
