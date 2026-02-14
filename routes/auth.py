@@ -41,7 +41,10 @@ def login():
                         """, (user['id'],))
             tipprunden = cursor.fetchall()
 
-            session['tipprunde_id'] = tipprunden[0]['id']
+            if tipprunden:
+                session['tipprunde_id'] = tipprunden[0]['id']
+            else:
+                session['tipprunde_id'] = None
 
             login_user(User(user["id"], user["username"], user["password_hash"]))
             return redirect(url_for("home.index"))
