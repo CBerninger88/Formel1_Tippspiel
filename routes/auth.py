@@ -123,23 +123,26 @@ def forgot_password():
             (email,)
         )
         user = cursor.fetchone()
+        try:
+            if user:
+                serializer = get_serializer()
+                token = serializer.dumps(
+                    user["email"],
+                    salt="password-reset"
+                )
 
-        if user:
-            serializer = get_serializer()
-            token = serializer.dumps(
-                user["email"],
-                salt="password-reset"
-            )
-
-            reset_url = url_for(
+                reset_url = url_for(
                 "auth.reset_password",
-                token=token,
-                _external=True
-            )
+                    token=token,
+                    _external=True
+                )
 
-            # 🔧 Fürs Testen verständlich & praktisch
-            send_reset_email(user["email"], user['username'], reset_url)
-            print("PASSWORT-RESET-LINK:", reset_url)
+                # 🔧 Fürs Testen verständlich & praktisch
+                send_reset_email(user["email"], user['username'], reset_url)
+        except Exception as e:
+            print("FEHLER BEIM RESET:", e)
+
+        print("PASSWORT-RESET-LINK:", reset_url)
 
         flash("Falls ein Konto mit dieser E-Mail existiert, wurde ein Reset-Link erzeugt.")
         return redirect(url_for("auth.login"))
