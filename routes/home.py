@@ -7,6 +7,8 @@ from models.dummy import Dummytipps
 
 from models import utils
 from models.spieler import Spieler
+from datetime import date
+from datetime import datetime
 
 home_bp = Blueprint('home', __name__)
 
@@ -101,45 +103,67 @@ def get_tipps():
 
         return jsonify(ergebnis)
 
-    # Get all Quali Tipps
-    names = utils.get_users_withtipp(race_id, tipprunde_id, 'qualitipps')
-    for name in names:
-        spieler = Spieler(name)
-        qualitipps = spieler.get_quali_tipps([race_id], tipprunde_id)[0]
-        if name not in ergebnis:
-            ergebnis[name] = {}
-        ergebnis[name].update(qualitipps.get(race_id))
+    ## Wenn in Tipprunde, erstmal current user
+    name = current_user.username
+    ergebnis[name] = {}
+    spieler = Spieler(name)
+    qualitipps = spieler.get_quali_tipps([race_id], tipprunde_id)[0]
+    racetipps = spieler.get_race_tipps([race_id], tipprunde_id)[0]
+    fastestLabtipp = spieler.get_fastestlap_tipp([race_id], tipprunde_id)[0]
 
-    # Get all Race Tipps
-    names = utils.get_users_withtipp(race_id, tipprunde_id, 'racetipps')
-    for name in names:
-        spieler = Spieler(name)
-        racetipps = spieler.get_race_tipps([race_id], tipprunde_id)[0]
-        if name not in ergebnis:
-            ergebnis[name] = {}
-        ergebnis[name].update(racetipps.get(race_id))
+    ergebnis[name].update(qualitipps.get(race_id, {}))
+    ergebnis[name].update(racetipps.get(race_id, {}))
+    ergebnis[name].update(fastestLabtipp.get(race_id, {}))
 
-    # Get fastest Lab Tipp
-    names = utils.get_users_withtipp(race_id, tipprunde_id, 'fastestlab')
-    for name in names:
-        spieler = Spieler(name)
-        fastestLabtipp = spieler.get_fastestlap_tipp([race_id], tipprunde_id)[0]
-        if name not in ergebnis:
-            ergebnis[name] = {}
-        ergebnis[name].update(fastestLabtipp.get(race_id))
+    is_sprint = utils.is_sprint(race_id)
+    if is_sprint:
+        sprinttipps = spieler.get_sprint_tipps(race_id, tipprunde_id)[0]
+        ergebnis[name].update(sprinttipps)
+
+    heute = date.today()
+    renndatum = datetime.strptime(request.args.get('city').split(', ')[1], "%Y-%m-%d").date()
+    if (renndatum - heute).days < 3:
+        # Get all Quali Tipps
+        names = utils.get_users_withtipp(race_id, tipprunde_id, 'qualitipps')
+        for name in names:
+            spieler = Spieler(name)
+            qualitipps = spieler.get_quali_tipps([race_id], tipprunde_id)[0]
+            if name not in ergebnis:
+                ergebnis[name] = {}
+            ergebnis[name].update(qualitipps.get(race_id))
+
+        # Get all Race Tipps
+        names = utils.get_users_withtipp(race_id, tipprunde_id, 'racetipps')
+        for name in names:
+            spieler = Spieler(name)
+            racetipps = spieler.get_race_tipps([race_id], tipprunde_id)[0]
+            if name not in ergebnis:
+                ergebnis[name] = {}
+            ergebnis[name].update(racetipps.get(race_id))
+
+        # Get fastest Lab Tipp
+        names = utils.get_users_withtipp(race_id, tipprunde_id, 'fastestlab')
+        for name in names:
+            spieler = Spieler(name)
+            fastestLabtipp = spieler.get_fastestlap_tipp([race_id], tipprunde_id)[0]
+            if name not in ergebnis:
+                ergebnis[name] = {}
+            ergebnis[name].update(fastestLabtipp.get(race_id))
 
 
     # Get Sprint Tipps if city has Sprintrennen
     is_sprint = utils.is_sprint(race_id)
     if is_sprint:
-
-        names = utils.get_users_withtipp(race_id, tipprunde_id, 'sprinttipps')
-        for name in names:
-            spieler = Spieler(name)
-            sprinttipps = spieler.get_sprint_tipps(race_id, tipprunde_id)[0]
-            if name not in ergebnis:
-                ergebnis[name] = {}
-            ergebnis[name].update(sprinttipps.get(race_id))
+        heute = date.today()
+        renndatum = datetime.strptime(request.args.get('city').split(', ')[1], "%Y-%m-%d").date()
+        if (renndatum - heute).days < 3:
+            names = utils.get_users_withtipp(race_id, tipprunde_id, 'sprinttipps')
+            for name in names:
+                spieler = Spieler(name)
+                sprinttipps = spieler.get_sprint_tipps(race_id, tipprunde_id)[0]
+                if name not in ergebnis:
+                    ergebnis[name] = {}
+                ergebnis[name].update(sprinttipps.get(race_id))
 
         ergebnis.update({f'sprint': is_sprint})
 
