@@ -118,7 +118,7 @@ def get_tipps():
     is_sprint = utils.is_sprint(race_id)
     if is_sprint:
         sprinttipps = spieler.get_sprint_tipps(race_id, tipprunde_id)[0]
-        ergebnis[name].update(sprinttipps)
+        ergebnis[name].update(sprinttipps.get(race_id, {}))
 
     heute = date.today()
     renndatum = datetime.strptime(request.args.get('city').split(', ')[1], "%Y-%m-%d").date()
