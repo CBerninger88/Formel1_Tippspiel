@@ -739,7 +739,7 @@ def get_racepunkte(raceergebnis, racetipps, wmStand, city):
             else:
                 if tipp in wmStand:
                     j = wmStand.index(tipp)
-                    rpunkte.update({f'rpunkte{i + 1}': abs(j - i) * 10 + 10})
+                    rpunkte.update({f'rpunkte{i + 1}': min(abs(j - i) * 10 + 10, 60)})
 
         elif tipp != race_ergebnis[i] and tipp in race_ergebnis:
             # if wmStand is not None and tipp in wmStand:
