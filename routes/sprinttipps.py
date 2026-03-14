@@ -68,12 +68,16 @@ def get_sprinttipps():
 
     spieler = Spieler(name)
     drivers = {}
-    drivers.update(spieler.get_sprint_tipps(race_id, tipprunde_id)[0])
+    sdrivers, sstatus = spieler.get_sprint_tipps([race_id], tipprunde_id)
+    drivers.update(sdrivers.get(race_id, {}))
+    #drivers.update(spieler.get_sprint_tipps(race_id, tipprunde_id)[0])
 
     heute = date.today()
     renndatum = datetime.strptime(request.args.get('city').split(', ')[1], "%Y-%m-%d").date()
     if (renndatum - heute).days < 3:
         drivers.update({'zeitschranke': True})
+    else:
+        drivers.update({'zeitschranke': False})
 
     return jsonify(drivers)
 

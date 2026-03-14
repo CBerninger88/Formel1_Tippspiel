@@ -58,8 +58,10 @@ export function initSprinttippsPage(){
             .then(response => response.json())
             .then(data => {
                 sdriverSelects.forEach((sDriverSelect, index) => {
+                    sDriverSelect.disabled = false;
                    const sDriverKey = `sdriver${index + 1}`;
                    sDriverSelect.value = data[sDriverKey] || "";
+                   if (data.zeitschranke) sDriverSelect.disabled = true;
                 });
                 markAllDuplicates();
             });
