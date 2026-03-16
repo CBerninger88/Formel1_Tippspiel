@@ -789,8 +789,15 @@ def get_sprintpunkte(sprintergebnis, sprinttipp):
     for i, tipp in enumerate(sprinttipp):
         if tipp == sprintergebnis[i]:
             spunkte.update({f'spunkte{i + 1}': 10})
-        elif tipp in sprintergebnis:
-            spunkte.update({f'spunkte{i + 1}': 4})
+#        elif tipp in sprintergebnis:
+#            spunkte.update({f'spunkte{i + 1}': 5})
+        elif tipp != sprintergebnis[i] and tipp in sprintergebnis:
+            # if wmStand is not None and tipp in wmStand:
+            j = sprintergebnis.index(tipp)
+            if abs(i - j) > 1:
+                spunkte.update({f'spunkte{i + 1}': 3})
+            else:
+                spunkte.update({f'spunkte{i + 1}': 5})
         else:
             spunkte.update({f'spunkte{i + 1}': 0})
     msg = 'Alles ok'

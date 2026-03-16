@@ -130,7 +130,7 @@ def get_gesamtpunkte():
             sprinttipp, status4 = player.get_sprint_tipps([sprint_ids], tipprunde_id)
 
         for race_id in race_ids:
-            wmStand, status = utils.get_wm_stand(race_id, saison)
+            wmStand, status = utils.get_wm_stand(race_id-1, saison)
             city = utils.get_cityName(race_id)
             qpunkte, _, _ = utils.get_qualipunkte(qualiergebnis.get(race_id), qualitipps.get(race_id, {}))
             rpunkte, _, _ = utils.get_racepunkte(raceergebnis.get(race_id), racetipps.get(race_id, {}), wmStand, city['cityName'])
@@ -181,11 +181,14 @@ def get_racepunkte():
         return {"success": False, "message": message, "players": []}
 
     # WM Stand einmal abziehen
-    wmStand, status = utils.get_wm_stand(race_id, saison)
-    if not wmStand:
-        success = False
-        message = f'Es gibt für {city} noch keinen WM Stand'
-        return {"success": False, "message": message, "players": []}
+    if city == 'Melbourne':
+        wmStand = []
+    else:
+        wmStand, status = utils.get_wm_stand(race_id-1, saison)
+        if not wmStand:
+            success = False
+            message = f'Es gibt für {city} noch keinen WM Stand'
+            return {"success": False, "message": message, "players": []}
 
     players = []
     for user in spieler:
