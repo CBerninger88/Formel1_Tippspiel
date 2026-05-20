@@ -69,7 +69,7 @@ export function initTippabgabePage(){
             const heute = new Date();
 
             const diffTime = renndatum - heute; // Millisekunden
-            const diffDays = diffTime / (1000 * 60 * 60 * 24);
+            const diffDays = diffTime / (60 * 60 * 24);
 
             // Button nur aktivieren, wenn mindestens 3 Tage vor dem Rennen
             copyBtn.disabled = diffDays < 3;
