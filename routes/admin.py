@@ -69,7 +69,7 @@ def get_sprintergebnis():
 
     ergebnis = {}
     drivers, success = utils.get_sprintergebnis([race_id], saison)
-    ergebnis.update(drivers.get(race_id))
+    ergebnis.update(drivers.get(race_id, {}))
     ergebnis.update(success)
 
     return jsonify(ergebnis)

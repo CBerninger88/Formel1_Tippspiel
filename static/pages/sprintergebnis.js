@@ -41,7 +41,7 @@ export function initSprintergebnisPage(){
             .then(response => response.json())
             .then(data => {
                 driverSelects.forEach((driverSelect, index) => {
-                   const driverKey = `driver${index + 1}`;
+                   const driverKey = `sdriver${index + 1}`;
                    driverSelect.value = data[driverKey] || "";
                 });
                 if (!data.success) {

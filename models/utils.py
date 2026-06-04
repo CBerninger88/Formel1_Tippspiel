@@ -262,7 +262,8 @@ def get_rennergebnis(race_ids, saison):
         SELECT DISTINCT ON (race_id)
             race_id,
             driver1, driver2, driver3, driver4, driver5, driver6, driver7, driver8, driver9, driver10,
-            driver11, driver12, driver13, driver14, driver15, driver16, driver17, driver18, driver19, driver20
+            driver11, driver12, driver13, driver14, driver15, driver16, driver17, driver18, driver19, driver20,
+            driver21, driver22
         FROM rennergebnisse
         WHERE race_id = ANY(%s)
         AND saison = %s
@@ -593,12 +594,12 @@ def set_dummies(race_id, saison, qdrivers, rdrivers, fdriver):
     for team in top5_teams:
         top10_team_drivers.extend(team_to_drivers.get(team, []))
 
-    top4_team_drivers = [entry["driver"] for entry in top10_team_drivers if 1 <= entry["platz"] <= 4]
+    top4_team_drivers = [entry["driver"] for entry in top10_team_drivers[:4]]
     top10_team_drivers = [entry["driver"] for entry in top10_team_drivers]
 
     dummy_service.save_tipps(dummy_id, race_id_new, saison, top4_team_drivers, 'quali')
     dummy_service.save_tipps(dummy_id, race_id_new, saison, top10_team_drivers, 'race')
-    dummy_service.save_tipps(dummy_id, race_id_new, saison, fdriver, 'fastest')
+    dummy_service.save_tipps(dummy_id, race_id_new, saison, [top4_team_drivers[0]], 'fastest')
 
     if sprint:
         dummy_service.save_tipps(dummy_id, race_id_new, saison, top10_team_drivers[0:8], 'sprint')
@@ -626,8 +627,9 @@ def set_dummies(race_id, saison, qdrivers, rdrivers, fdriver):
 
         if sprint:
             sprintergebnis_ly, status = get_sprintergebnis(race_id_ly, saison_ly)
-            sprintergebnis_ly_list = list(sprintergebnis_ly.get(race_id_ly).values())
-            dummy_service.save_tipps(dummy_id, race_id_new, saison, sprintergebnis_ly_list, 'sprint')
+            sprintergebnis_ly_list = list(sprintergebnis_ly.get(race_id_ly, {}).values())
+            if sprintergebnis_ly_list:
+                dummy_service.save_tipps(dummy_id, race_id_new, saison, sprintergebnis_ly_list, 'sprint')
 
     else:
         dummy_service.save_tipps(dummy_id, race_id_new, saison, top4_drivers, 'quali')
