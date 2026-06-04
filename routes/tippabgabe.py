@@ -80,18 +80,18 @@ def get_selection():
     heute = date.today()
     renndatum = datetime.strptime(request.args.get('city').split(', ')[1], "%Y-%m-%d").date()
     if (renndatum - heute).days < 3:
-        if not qstatus['success']:
-            qdrivers = spieler.get_quali_tipps([race_id-1], tipprunde_id)[0]
-            drivers.update(qdrivers.get(race_id-1))
-            spieler.set_quali_tipps(race_id, tipprunde_id, saison, [qdrivers.get(f'qdriver{i+1}', '') for i in range(4)])
-        if not rstatus['success']:
-            rdrivers = spieler.get_race_tipps([race_id-1], tipprunde_id)[0]
-            drivers.update(rdrivers.get(race_id-1))
-            spieler.set_race_tipps(race_id, tipprunde_id, saison, [rdrivers.get(f'rdriver{i+1}', '') for i in range(10)])
-        if not fstatus['success']:
-            fdriver = spieler.get_fastestlap_tipp([race_id-1], tipprunde_id)[0]
-            drivers.update(fdriver.get(race_id-1))
-            spieler.set_fastestLab_tipps(race_id, tipprunde_id, saison, fdriver['fdriver1'])
+        #if not qstatus['success']:
+        #    qdrivers = spieler.get_quali_tipps([race_id-1], tipprunde_id)[0]
+        #    drivers.update(qdrivers.get(race_id-1))
+        #    spieler.set_quali_tipps(race_id, tipprunde_id, saison, [qdrivers.get(f'qdriver{i+1}', '') for i in range(4)])
+        #if not rstatus['success']:
+        #    rdrivers = spieler.get_race_tipps([race_id-1], tipprunde_id)[0]
+        #    drivers.update(rdrivers.get(race_id-1))
+        #    spieler.set_race_tipps(race_id, tipprunde_id, saison, [rdrivers.get(f'rdriver{i+1}', '') for i in range(10)])
+        #if not fstatus['success']:
+        #    fdriver = spieler.get_fastestlap_tipp([race_id-1], tipprunde_id)[0]
+        #    drivers.update(fdriver.get(race_id-1))
+        #    spieler.set_fastestLab_tipps(race_id, tipprunde_id, saison, fdriver['fdriver1'])
         drivers.update({'zeitschranke': True})
 
     else:
